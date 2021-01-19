@@ -310,19 +310,19 @@
        	//	}
        		var spam = false;
     		
-    		for(var i=0;i<(msg.length);i++){
-    			var j = 0;
-    			for(var k=0;k<(msg.length);k++){
-    				if(msg.charAt(i)==msg.charAt(k)){j++;}
-    			}
-    			if (j>8){
-    				spam = true;
-    			} 
-    		}
-       		if(spam){msg="";}
+//     		for(var i=0;i<(msg.length);i++){
+//     			var j = 0;
+//     			for(var k=0;k<(msg.length);k++){
+//     				if(msg.charAt(i)==msg.charAt(k)){j++;}
+//     			}
+//     			if (j>8){
+//     				spam = true;
+//     			} 
+//     		}
+//        		if(spam){msg="";}
        		
         	if(msg.length>35){
-    			msg = msg.substring(0,35);
+    			msg = msg.substring(0,35) + " 太長唸完會嘴酸";
     		}
         	console.log(msg);
         	

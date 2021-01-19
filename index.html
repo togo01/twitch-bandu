@@ -285,9 +285,9 @@
     	}
 
 		function filter(msg) {
-			msg= msg.replace(/([\>\<\.@дω\*\~_\?\^\#])+/gi,"");
+		msg= msg.replace("0.0", "傻眼貓咪");
+		msg= msg.replace(/([\>\<\.@дω\*\~_\?\^\#])+/gi,"");
         	msg= msg.replace(/.*◕.*/g, "");
-        	msg= msg.replace("0.0", "");
         	msg= msg.replace(/([^A-Za-z])[w|W]$\1/, "哇啦");
         	msg= msg.replace(/www*/gi, "哇啦哇啦");
         	msg= msg.replace(/XD+/gi, "插滴");

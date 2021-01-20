@@ -295,6 +295,7 @@
        		msg= msg.replace(/.*bschk.*/g, "");
         	msg= msg.replace(/.*pv zk.*/g, "");
         	msg= msg.replace(/.*艮心丟醫.*/g, "艮心丟醫以下省略");
+		msg= msg.replace(/(她媽|他媽|它媽|祂媽)/g, "他插")
 			
 		if (msg.replace(/8/g, "") == "") {
 			msg = msg.replace(/8/g, "八 ");

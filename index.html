@@ -300,8 +300,7 @@
 		if (msg.replace(/8/g, "") == "") {
 			msg = msg.replace(/8/g, "八 ");
 		}
-        	
-        	
+			
         	msg= msg.replace(/^!.*/g, "");
 
         //	for(i=0;i<(msg.length-3);i++){
@@ -433,9 +432,14 @@
 						setTimeout(CoolDown,parseInt(cdsec)*1000);
 					}
 					
-				}else if(filter(message)!=""&&banlistsrray.indexOf( user )==-1){
-  					msgarray.push("https://ttsproxy1.appspot.com/"+filter(message)+"?tl="+lanTest(filter(message))+"&engine="+engine+"&itriconf="+itriconfig+"&channel="+channel_f.replace("#", ""));
-  					//msgarray.push(filter(message)+"?tl="+lanTest(filter(message))+"&engine="+engine+"&itriconf="+itriconfig+"&channel="+channel_f.replace("#", ""));
+				} else if (banlistsrray.indexOf( user )==-1) {
+					var msg = filter(message);
+					if (msg != "") {
+						msgarray.push("https://ttsproxy1.appspot.com/"+msg+"?tl="+lanTest(msg)+"&engine="+engine+"&itriconf="+itriconfig+"&channel="+channel_f.replace("#", ""));
+					}
+					if (msg == "滾滾") {
+						msgarray.push("https://ttsproxy1.appspot.com/嘿右"?tl="+lanTest(msg)+"&engine="+engine+"&itriconf="+itriconfig+"&channel="+channel_f.replace("#", ""));	
+					}
   				}
  			});
  			

@@ -153,6 +153,8 @@
 
         window.onload = function() {
 
+            var audio = ["像我這麼強很快就上去了", "哭啊", "嘿上", "嘿下", "土撥鼠", "專業點行不行", "我的我的我的我的", "救命", "救命啊", "有沒有槍", "槍在哪", "欸"];
+
             var bot = null;
             var username = 'justinfan12345';
             var oauth = 'blah';
@@ -511,6 +513,10 @@
                         }
 
                     } else if (banlistsrray.indexOf(user) == -1) {
+                        if (audio.indexOf(message) != -1) {
+                            msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + message + ".mp3");
+                            return;
+                        }
                         var msg = filter(message);
                         if (msg != "") {
                             msgarray.push("https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=" + engine + "&itriconf=" + itriconfig + "&channel=" + channel_f.replace("#", ""));

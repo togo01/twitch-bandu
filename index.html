@@ -153,7 +153,7 @@
 
         window.onload = function() {
 
-            var audio = ["像我這麼強很快就上去了", "哭啊", "嘿上", "嘿下", "土撥鼠", "專業點行不行", "我的我的我的我的", "救命", "救命啊", "有沒有槍", "槍在哪", "欸"];
+            var audio = [];
 
             var bot = null;
             var username = 'justinfan12345';
@@ -162,6 +162,22 @@
             var msgarray = new Array();
             var selist = [];
             var cd = true;
+
+            setInterval(loadAudioList, 10000);
+
+            function loadAudioList() {
+                $.ajax({
+                    type: "get",
+                    url: "audio.json",
+                    dataType: "json",
+                    success: function(json) {
+                        var newList = json.audioList;
+                        if (newList.length() > 0) {
+                            audio = newList;
+                        }
+                    }
+                });
+            }
 
 
             function getParameterByName(name, url) {

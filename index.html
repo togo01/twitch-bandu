@@ -172,6 +172,7 @@
                     type: "get",
                     url: "audio.json",
                     dataType: "json",
+                    cache: false,
                     success: function(json) {
                         var newList = json.audio;
                         if (newList.length > 0) {

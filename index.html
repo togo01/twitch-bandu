@@ -154,6 +154,7 @@
         window.onload = function() {
 
             var audio = [];
+            var audioLibrary = {};
 
             var bot = null;
             var username = 'justinfan12345';
@@ -172,12 +173,22 @@
                     url: "audio.json",
                     dataType: "json",
                     success: function(json) {
-                        var newList = json.audioList;
+                        var newList = json.audio;
                         if (newList.length > 0) {
                             audio = newList;
+                            audioLibrary = json.library;
                         }
                     }
                 });
+            }
+
+            function getAudioFromLibrary(msg) {
+                if (audio.indexOf(msg) == -1)
+                    return null;
+                if (!msg in audioLibrary)
+                    return null;
+                var audios = audioLibrary[msg];
+                return $.rand(audios);
             }
 
 
@@ -530,8 +541,9 @@
                         }
 
                     } else if (banlistsrray.indexOf(user) == -1) {
-                        if (audio.indexOf(message) != -1) {
-                            msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + message + ".mp3");
+                        var audioMsg = getAudioFromLibrary(message);
+                        if (audioMsg != null) {
+                            msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMsg);
                             return;
                         }
                         var msg = filter(message);

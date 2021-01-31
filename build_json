@@ -1,0 +1,33 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+from os import listdir
+from os.path import isfile, isdir, join, splitext
+import re
+import json
+
+files = listdir("audio");
+
+output = {
+  "audio": [],
+  "library": {}
+}
+
+for f in files:
+  filename, extension = splitext(f)
+  if extension != ".mp3":
+    continue
+  if filename[-1].isdigit():
+    number = re.findall(r'\d+', filename)[-1]
+    filename = filename[0:len(filename) - len(number)]
+
+  if filename not in output["audio"]:
+    output["audio"].append(filename)
+
+  if filename not in output["library"]:
+    output["library"][filename] = [f]
+  else:
+    output["library"][filename].append(f)
+
+fp = open("audio.json", "w")
+fp.write(json.dumps(output))
+fp.close()

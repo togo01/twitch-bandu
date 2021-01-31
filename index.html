@@ -189,7 +189,7 @@
                 if (!msg in audioLibrary)
                     return null;
                 var audios = audioLibrary[msg];
-                return $.rand(audios);
+                return audios[Math.floor(Math.random() * audios.length)];
             }
 
 

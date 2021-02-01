@@ -22,11 +22,14 @@ for f in files:
 
   if filename not in output["audio"]:
     output["audio"].append(filename)
+    print(filename)
 
   if filename not in output["library"]:
     output["library"][filename] = [f]
   else:
     output["library"][filename].append(f)
+
+print("指令數量：" + str(len(output["audio"])))
 
 fp = open("audio.json", "w")
 fp.write(json.dumps(output))

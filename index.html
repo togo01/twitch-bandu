@@ -154,7 +154,7 @@
         window.onload = function() {
 
             var audioIndex = {};
-            var audio = [];
+            var audioList = [];
             var audioLibrary = {};
             var build = 0;
 
@@ -178,7 +178,7 @@
                     success: function(json) {
                         if (json.build != build) {
                             audioIndex = json.index;
-                            audio = json.audio;
+                            audioList = json.audio;
                             audioLibrary = json.library;
                             build = json.build;
                         }
@@ -187,7 +187,7 @@
             }
 
             function getAudioFromLibrary(msg) {
-                if (audio.indexOf(msg) == -1)
+                if (audioList.indexOf(msg) == -1)
                     return null;
                 if (!msg in audioLibrary)
                     return null;
@@ -204,6 +204,22 @@
                 if (!results) return null;
                 if (!results[2]) return '';
                 return decodeURIComponent(results[2].replace(/\+/g, ' '));
+            }
+
+            const audio = document.getElementById('maudio');
+            var isPlayingAudio = false;
+            audio.onloadstart = function() {
+                // console.log('Audio LoadStart');
+            }
+            audio.onloadeddata = function() {
+                // console.log('Audio Loaded Data');
+            }
+            audio.play = function() {
+                // console.log('Audio Play');
+            }
+            audio.onended = function() {
+                isPlayingAudio = false;
+                // console.log('Audio Ended');
             }
 
 
@@ -429,10 +445,8 @@
                 //     		}
                 //        		if(spam){msg="";}
 
-                if (msg.length > 35) {
-                    msg = msg.substring(0, 35) + " 太長唸完會嘴酸";
-                }
-                console.log(msg);
+
+                // console.log(msg);
 
                 return msg;
 
@@ -545,6 +559,12 @@
                         }
 
                     } else if (banlistsrray.indexOf(user) == -1) {
+
+                        var isTooLong = message.length > 35;
+                        if (isTooLong) {
+                            message = message.substring(0, 35);
+                        }
+
                         var processStar = 0;
                         var stringBuffer = "";
                         for (i = 0; i < message.length; i++) {
@@ -585,15 +605,23 @@
                         if (processStar >= message.length)
                             return;
 
+                        message = message.substring(processStar);
+
                         var audioMsg = getAudioFromLibrary(message);
                         if (audioMsg != null) {
                             msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMsg);
                             return;
                         }
+
                         var msg = filter(message);
                         if (msg != "") {
                             msgarray.push("https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=" + engine + "&itriconf=" + itriconfig + "&channel=" + channel_f.replace("#", ""));
                         }
+
+                        if (isTooLong) {
+                            msgarray.push("https://ttsproxy1.appspot.com/太長唸完會嘴酸?tl=zh_cn&engine=" + engine + "&itriconf=" + itriconfig + "&channel=" + channel_f.replace("#", ""));
+                        }
+
                         if (msg == "滾滾") {
                             msgarray.push("https://togo01.github.io/twitch-bandu/audio/嘿右.mp3");
                         }
@@ -924,13 +952,22 @@
 
             setInterval(speak_runnable, 100);
 
-            function speak_runnable() {
+            // speak_runnable();
 
-                if (msgarray[0] && ($("audio").prop("currentTime") == 0 || $("audio").prop("ended"))) {
-                    $("audio").attr("src", msgarray[0]);
-                    $("audio").trigger('play');
+            function speak_runnable() {
+                if (isPlayingAudio) return;
+
+                if (msgarray[0] && (audio.paused || audio.ended)) {
+                    isPlayingAudio = true;
+                    audio.src = msgarray[0];
+                    audio.autoplay = true;
+                    audio.load();
+                    // $("audio").attr("src", msgarray[0]);
+                    // $("audio").trigger('play');
                     msgarray.shift();
 
+                } else {
+                    // setTimeout(speak_runnable, 500);
                 }
                 //	console.log($("body").prop("scrollHeight") );
             }

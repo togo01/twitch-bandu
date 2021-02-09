@@ -29,17 +29,18 @@ for f in files:
     output["index"][first_char] = [filename]
   elif filename not in output["index"][first_char]:
     output["index"][first_char].append(filename)
+    output["index"][first_char].sort(key=len, reverse=True)
 
   if filename not in output["audio"]:
     output["audio"].append(filename)
+    output["audio"].sort(key=len,  reverse=True)
     print(filename)
 
   if filename not in output["library"]:
     output["library"][filename] = [f]
   else:
     output["library"][filename].append(f)
-  
-  
+
 
 print("指令數量：" + str(len(output["audio"])))
 

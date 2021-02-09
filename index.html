@@ -153,7 +153,7 @@
 
         window.onload = function() {
 
-            var index = {};
+            var audioIndex = {};
             var audio = [];
             var audioLibrary = {};
             var build = 0;
@@ -177,7 +177,7 @@
                     cache: false,
                     success: function(json) {
                         if (json.build != build) {
-                            index = json.index;
+                            audioIndex = json.index;
                             audio = json.audio;
                             audioLibrary = json.library;
                             build = json.build;
@@ -545,6 +545,46 @@
                         }
 
                     } else if (banlistsrray.indexOf(user) == -1) {
+                        var processStar = 0;
+                        var stringBuffer = "";
+                        for (i = 0; i < message.length; i++) {
+                            var currentChar = message.charAt(i);
+                            if (!(currentChar in audioIndex))
+                                continue;
+                            if (!Array.isArray([currentChar]))
+                                continue;
+
+                            var isMatch = false;
+                            var matchAudio = null;
+
+                            for (j = 0; j < audioIndex[currentChar].length; j++) {
+                                if (message.indexOf(audioIndex[currentChar][j], i) == i) {
+                                    isMatch = true;
+                                    matchAudio = audioIndex[currentChar][j];
+                                    break;
+                                }
+                            }
+
+                            if (!isMatch)
+                                continue;
+
+                            if (i - processStar > 0) {
+                                var normalMessage = message.substring(processStar, i);
+                                msgarray.push("https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=" + engine + "&itriconf=" + itriconfig + "&channel=" + channel_f.replace("#", ""));
+                            }
+
+                            var audioMessage = getAudioFromLibrary(matchAudio);
+                            if (audioMessage != null) {
+                                msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMessage);
+                                i += matchAudio.length - 1;
+                                processStar = i + 1;
+                            }
+
+                        }
+
+                        if (processStar >= message.length)
+                            return;
+
                         var audioMsg = getAudioFromLibrary(message);
                         if (audioMsg != null) {
                             msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMsg);

@@ -1,15 +1,18 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 from os import listdir
 from os.path import isfile, isdir, join, splitext
 import re
 import json
+import time;
 
 files = listdir("audio");
 
 output = {
+  "index": {},
   "audio": [],
-  "library": {}
+  "library": {},
+  "build": time.time()
 }
 
 for f in files:
@@ -20,6 +23,13 @@ for f in files:
     number = re.findall(r'\d+', filename)[-1]
     filename = filename[0:len(filename) - len(number)]
 
+  first_char = filename[0]
+
+  if first_char not in output["index"]:
+    output["index"][first_char] = [filename]
+  elif filename not in output["index"][first_char]:
+    output["index"][first_char].append(filename)
+
   if filename not in output["audio"]:
     output["audio"].append(filename)
     print(filename)
@@ -28,9 +38,11 @@ for f in files:
     output["library"][filename] = [f]
   else:
     output["library"][filename].append(f)
+  
+  
 
 print("指令數量：" + str(len(output["audio"])))
 
 fp = open("audio.json", "w")
-fp.write(json.dumps(output))
+fp.write(json.dumps(output, ensure_ascii=False, indent=2))
 fp.close()

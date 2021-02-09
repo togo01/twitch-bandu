@@ -153,8 +153,10 @@
 
         window.onload = function() {
 
+            var index = {};
             var audio = [];
             var audioLibrary = {};
+            var build = 0;
 
             var bot = null;
             var username = 'justinfan12345';
@@ -174,10 +176,11 @@
                     dataType: "json",
                     cache: false,
                     success: function(json) {
-                        var newList = json.audio;
-                        if (newList.length > 0) {
-                            audio = newList;
+                        if (json.build != build) {
+                            index = json.index;
+                            audio = json.audio;
                             audioLibrary = json.library;
+                            build = json.build;
                         }
                     }
                 });
@@ -552,7 +555,6 @@
                             msgarray.push("https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=" + engine + "&itriconf=" + itriconfig + "&channel=" + channel_f.replace("#", ""));
                         }
                         if (msg == "滾滾") {
-                            // msgarray.push("https://ttsproxy1.appspot.com/嘿右?tl=zh_cn&engine="+engine+"&itriconf="+itriconfig+"&channel="+channel_f.replace("#", ""));	
                             msgarray.push("https://togo01.github.io/twitch-bandu/audio/嘿右.mp3");
                         }
                     }
@@ -880,7 +882,7 @@
                 updateurl();
             }
 
-            setInterval(speak_runnable, 500);
+            setInterval(speak_runnable, 100);
 
             function speak_runnable() {
 

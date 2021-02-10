@@ -394,7 +394,6 @@
                                 }
                             }
                         }
-                        //console.log(emotrarr2);
                     }
                     var displaynamefix = tags["display-name"];
                     if (user.toLowerCase() == tags["display-name"].toLowerCase() || tags["display-name"] == "") {
@@ -458,12 +457,52 @@
 
                     if (banlistsrray.indexOf(user) == -1) {
 
-                        if (se == "on") {
+                        // sometimes the name of character you mention is too hard to connect in Chinese. haha. they are trying hard to figure out.
 
-                            var isTooLong = message.length > 35;
-                            if (isTooLong) {
-                                message = message.substring(0, 35);
+                        var messageLength = 0;
+                        var messageIsNotFull = true;
+                        var messageInSize = "";
+                        var messageIsTooLong = false;
+                        for (var i = 0; i < message.length; i++) {
+                            var spaceAt = message.indexOf(' ', i);
+                            if (spaceAt < 0) {
+                                spaceAt = message.length;
                             }
+                            var word = message.substring(i, spaceAt);
+                            var thisWordLen = word.length;
+                            var wordLeng = lanTest(word);
+                            if (wordLeng == 'en_us') {
+                                if (word >= 10) {
+                                    thisWordLen = 3;
+                                } else if (word >= 5) {
+                                    thisWordLen = 2;
+                                } else {
+                                    thisWordLen = 1;
+                                }
+                            }
+
+                            if (messageIsNotFull) {
+                                if (wordLeng == 'en_us') {
+                                    messageInSize += word + " ";
+                                } else {
+                                    var leftSpace = 35 - messageLength;
+                                    if (thisWordLen <= leftSpace) {
+                                        messageInSize += word.substring(0, leftSpace);
+                                    }
+                                }
+                            }
+
+                            messageLength += thisWordLen;
+                            if (messageLength >= 35) {
+                                messageIsTooLong = true;
+                                break;
+                            }
+                            i = spaceAt + 1;
+                        }
+
+                        message = messageInSize;
+
+                        if (se == "on") {
 
                             var processStar = 0;
                             var stringBuffer = "";
@@ -522,7 +561,7 @@
                             msgarray.push("https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=" + engine + "&itriconf=" + itriconfig);
                             if (msg == "滾滾") {
                                 msgarray.push("https://togo01.github.io/twitch-bandu/audio/嘿右.mp3");
-                            } else if (isTooLong) {
+                            } else if (messageIsTooLong) {
                                 msgarray.push("https://ttsproxy1.appspot.com/太長唸完會嘴酸?tl=zh_cn&engine=" + engine + "&itriconf=" + itriconfig);
                             }
                         }

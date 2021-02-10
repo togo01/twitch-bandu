@@ -377,6 +377,7 @@
                 });
                 bot.on("message_with_tags", function(channel_f, user, message, tags) {
 
+                    var messageWitoutEmoji = "";
                     var banlistsrray = banlist.split(",");
                     var emotrarr;
                     var emotrarr2 = [];
@@ -435,9 +436,11 @@
                             }
                             if (!haskappa) {
                                 afterstr += message.charAt(i);
+                                messageWitoutEmoji += message.charAt(i);
                             }
                         } else {
                             afterstr += message.charAt(i);
+                            messageWitoutEmoji += message.charAt(i);
                         }
                     }
                     msgspan.append(afterstr);
@@ -459,116 +462,156 @@
 
                         // sometimes the name of character you mention is too hard to connect in Chinese. haha. they are trying hard to figure out.
 
-                        var messageLength = 0;
-                        var messageIsNotFull = true;
-                        var messageInSize = "";
-                        var messageIsTooLong = false;
-                        for (var i = 0; i < message.length; i++) {
-                            var spaceAt = message.indexOf(' ', i);
-                            if (spaceAt < 0) {
-                                spaceAt = message.length;
-                            }
-                            var word = message.substring(i, spaceAt);
-                            var thisWordLen = word.length;
-                            var wordLeng = lanTest(word);
-                            if (wordLeng == 'en_us') {
-                                if (word >= 10) {
-                                    thisWordLen = 3;
-                                } else if (word >= 5) {
-                                    thisWordLen = 2;
+
+
+                        if (messageWitoutEmoji.trim().length > 0 && lanTest(messageWitoutEmoji.trim()) == "en_us") {
+                            var translate = "";
+                            $.ajax({
+                                type: "post",
+                                url: "https://translation.googleapis.com/language/translate/v2?key=AIzaSyAZ2ojMmYwZH79266LWN7EVHhsSV8HcYfI",
+                                dataType: "json",
+                                data: {
+                                    q: messageWitoutEmoji,
+                                    source: "en",
+                                    target: "zh-TW",
+                                    format: "text"
+                                },
+                                cache: false,
+                                success: function(json) {
+                                    if ("data" in json) {
+                                        if ("translations" in json["data"]) {
+                                            if (Array.isArray(json["data"]["translations"]) && json["data"]["translations"].length > 0) {
+                                                translate = json["data"]["translations"][0]["translatedText"];
+                                            }
+                                        }
+                                    }
+                                }
+                            }).always(function() {
+                                if (translate != "") {
+                                    ProcessMessageToQueue("翻譯蒟蒻");
+                                    ProcessMessageToQueue(translate);
                                 } else {
-                                    thisWordLen = 1;
+                                    ProcessMessageToQueue(message);
                                 }
-                            }
-
-                            if (messageIsNotFull) {
-                                if (wordLeng == 'en_us') {
-                                    messageInSize += word + " ";
-                                } else {
-                                    var leftSpace = 35 - messageLength;
-                                    if (thisWordLen <= leftSpace) {
-                                        messageInSize += word.substring(0, leftSpace);
-                                    }
-                                }
-                            }
-
-                            messageLength += thisWordLen;
-                            if (messageLength >= 35) {
-                                messageIsTooLong = true;
-                                break;
-                            }
-                            i = spaceAt + 1;
+                            });
+                        } else {
+                            ProcessMessageToQueue(message);
                         }
 
-                        message = messageInSize;
-
-                        if (se == "on") {
-
-                            var processStar = 0;
-                            var stringBuffer = "";
-                            for (i = 0; i < message.length; i++) {
-                                var currentChar = message.charAt(i);
-                                if (!(currentChar in audioIndex))
-                                    continue;
-                                if (!Array.isArray([currentChar]))
-                                    continue;
-
-                                var isMatch = false;
-                                var matchAudio = null;
-
-                                for (j = 0; j < audioIndex[currentChar].length; j++) {
-                                    if (message.indexOf(audioIndex[currentChar][j], i) == i) {
-                                        isMatch = true;
-                                        matchAudio = audioIndex[currentChar][j];
-                                        break;
-                                    }
-                                }
-
-                                if (!isMatch)
-                                    continue;
-
-                                if (i - processStar > 0) {
-                                    var normalMessage = filter(message.substring(processStar, i));
-                                    if (normalMessage != "") {
-                                        msgarray.push("https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=" + engine + "&itriconf=" + itriconfig);
-                                    }
-                                }
-
-                                var audioMessage = getAudioFromLibrary(matchAudio);
-                                if (audioMessage != null) {
-                                    msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMessage);
-                                    i += matchAudio.length - 1;
-                                    processStar = i + 1;
-                                }
-
-                            }
-
-                            if (processStar >= message.length)
-                                return;
-
-                            message = message.substring(processStar);
-
-                            var audioMsg = getAudioFromLibrary(message);
-                            if (audioMsg != null) {
-                                msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMsg);
-                                return;
-                            }
-
-                        }
-
-                        var msg = filter(message);
-                        if (msg != "") {
-                            msgarray.push("https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=" + engine + "&itriconf=" + itriconfig);
-                            if (msg == "滾滾") {
-                                msgarray.push("https://togo01.github.io/twitch-bandu/audio/嘿右.mp3");
-                            } else if (messageIsTooLong) {
-                                msgarray.push("https://ttsproxy1.appspot.com/太長唸完會嘴酸?tl=zh_cn&engine=" + engine + "&itriconf=" + itriconfig);
-                            }
-                        }
 
                     }
                 });
 
+                function ProcessMessageToQueue(message) {
+
+                    var messageLength = 0;
+                    var messageIsNotFull = true;
+                    var messageInSize = "";
+                    var messageIsTooLong = false;
+                    for (var i = 0; i < message.length; i++) {
+                        var spaceAt = message.indexOf(' ', i);
+                        if (spaceAt < 0) {
+                            spaceAt = message.length;
+                        }
+                        var word = message.substring(i, spaceAt);
+                        var thisWordLen = word.length;
+                        var wordLeng = lanTest(word);
+                        if (wordLeng == 'en_us') {
+                            if (word >= 10) {
+                                thisWordLen = 3;
+                            } else if (word >= 5) {
+                                thisWordLen = 2;
+                            } else {
+                                thisWordLen = 1;
+                            }
+                        }
+
+                        if (messageIsNotFull) {
+                            if (wordLeng == 'en_us') {
+                                messageInSize += word + " ";
+                            } else {
+                                var leftSpace = 35 - messageLength;
+                                if (thisWordLen <= leftSpace) {
+                                    messageInSize += word.substring(0, leftSpace);
+                                }
+                            }
+                        }
+
+                        messageLength += thisWordLen;
+                        if (messageLength >= 35) {
+                            messageIsTooLong = true;
+                            break;
+                        }
+                        i = spaceAt + 1;
+                    }
+
+                    message = messageInSize;
+
+                    if (se == "on") {
+
+                        var processStar = 0;
+                        var stringBuffer = "";
+                        for (i = 0; i < message.length; i++) {
+                            var currentChar = message.charAt(i);
+                            if (!(currentChar in audioIndex))
+                                continue;
+                            if (!Array.isArray([currentChar]))
+                                continue;
+
+                            var isMatch = false;
+                            var matchAudio = null;
+
+                            for (j = 0; j < audioIndex[currentChar].length; j++) {
+                                if (message.indexOf(audioIndex[currentChar][j], i) == i) {
+                                    isMatch = true;
+                                    matchAudio = audioIndex[currentChar][j];
+                                    break;
+                                }
+                            }
+
+                            if (!isMatch)
+                                continue;
+
+                            if (i - processStar > 0) {
+                                var normalMessage = filter(message.substring(processStar, i));
+                                if (normalMessage != "") {
+                                    msgarray.push("https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=" + engine + "&itriconf=" + itriconfig);
+                                }
+                            }
+
+                            var audioMessage = getAudioFromLibrary(matchAudio);
+                            if (audioMessage != null) {
+                                msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMessage);
+                                i += matchAudio.length - 1;
+                                processStar = i + 1;
+                            }
+
+                        }
+
+                        if (processStar >= message.length)
+                            return;
+
+                        message = message.substring(processStar);
+
+                        var audioMsg = getAudioFromLibrary(message);
+                        if (audioMsg != null) {
+                            msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMsg);
+                            return;
+                        }
+
+                    }
+
+                    var msg = filter(message);
+                    if (msg != "") {
+                        msgarray.push("https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=" + engine + "&itriconf=" + itriconfig);
+                        if (msg == "滾滾") {
+                            msgarray.push("https://togo01.github.io/twitch-bandu/audio/嘿右.mp3");
+                        } else if (messageIsTooLong) {
+                            msgarray.push("https://ttsproxy1.appspot.com/太長唸完會嘴酸?tl=zh_cn&engine=" + engine + "&itriconf=" + itriconfig);
+                        }
+                    }
+
+                }
 
                 bot.on("join", function(channel_f, user) {
                     //console.log(channel_f);

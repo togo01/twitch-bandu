@@ -462,9 +462,10 @@
 
                         // sometimes the name of character you mention is too hard to connect in Chinese. haha. they are trying hard to figure out.
 
+                        messageWitoutEmoji = messageWitoutEmoji.trim();
+                        messageWitoutEmoji = filter(messageWitoutEmoji);
 
-
-                        if (messageWitoutEmoji.trim().length > 0 && lanTest(messageWitoutEmoji.trim()) == "en_us") {
+                        if (messageWitoutEmoji.length > 0 && lanTest(messageWitoutEmoji) == "en_us") {
                             var translate = "";
                             $.ajax({
                                 type: "post",
@@ -481,7 +482,7 @@
                                     if ("data" in json) {
                                         if ("translations" in json["data"]) {
                                             if (Array.isArray(json["data"]["translations"]) && json["data"]["translations"].length > 0) {
-                                                translate = json["data"]["translations"][0]["translatedText"];
+                                                translate = json["data"]["translations"][Math.floor(Math.random() * json["data"]["translations"].length)]["translatedText"];
                                             }
                                         }
                                     }
@@ -545,7 +546,7 @@
                         i = spaceAt;
                     }
 
-                    message = messageInSize;
+                    message = messageInSize.trim();
 
                     if (se == "on") {
 

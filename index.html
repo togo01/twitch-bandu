@@ -532,7 +532,7 @@
                             } else {
                                 var leftSpace = 35 - messageLength;
                                 if (thisWordLen <= leftSpace) {
-                                    messageInSize += word.substring(0, leftSpace);
+                                    messageInSize += word.substring(0, leftSpace) + " ";
                                 }
                             }
                         }
@@ -542,7 +542,7 @@
                             messageIsTooLong = true;
                             break;
                         }
-                        i = spaceAt + 1;
+                        i = spaceAt;
                     }
 
                     message = messageInSize;

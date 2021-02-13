@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang='zh-tw' style='overflow: hidden;' xml:lang='zh-tw' xmlns:fb='http://www.facebook.com/2008/fbml' xmlns:og='http://opengraphprotocol.org/schema/' xmlns='http://www.w3.org/1999/xhtml'>
+<html lang='zh-tw' style='overflow: hidden;' xml:lang='zh-tw' xmlns:fb='http://www.facebook.com/2008/fbml'
+    xmlns:og='http://opengraphprotocol.org/schema/' xmlns='http://www.w3.org/1999/xhtml'>
 
 <head>
     <meta charset="utf-8">
@@ -9,19 +10,19 @@
     <link rel="bookmark" href="/favicon.ico" />
     <link href="https://fonts.googleapis.com/css?family=Germania+One|Baloo+Thambi|Press+Start+2P" rel="stylesheet">
     <style type="text/css">
-         ::-webkit-scrollbar {
+        ::-webkit-scrollbar {
             background-color: rgb(25, 25, 25);
         }
-        
-         ::-webkit-scrollbar-thumb {
+
+        ::-webkit-scrollbar-thumb {
             background-color: rgb(50, 50, 50);
         }
-        
+
         .scroll {
             position: relative;
             overflow: hidden;
         }
-        
+
         .option {
             color: #999;
             line-height: 30px !important;
@@ -36,7 +37,7 @@
             padding-bottom: 2px !important;
             box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.04) inset !important;
         }
-        
+
         .switch-label {
             position: relative;
             z-index: 2;
@@ -51,7 +52,7 @@
             border-radius: 5px;
             margin: 0px
         }
-        
+
         #msellist select {
             padding: 0px;
             margin: 0;
@@ -61,25 +62,25 @@
             vertical-align: top;
             border: 0
         }
-        
+
         .option textarea {
             padding: 2px;
             margin: 0;
         }
-        
+
         .option button {
             min-height: 2em
         }
-        
+
         .closebutton:hover {
             cursor: pointer;
         }
-        
+
         .ircline {
             padding: 2px;
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 24px!important;
-            line-height: 26px!important;
+            font-size: 24px !important;
+            line-height: 26px !important;
             text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
             letter-spacing: 1px;
             font-variant: normal;
@@ -87,58 +88,59 @@
             font-style: normal;
             color: #fff;
         }
-        
+
         ruby {
             font-family: 'Helvetica Neue', 'Germania One', Helvetica, Arial, sans-serif;
         }
-        
+
         rt {
             font-family: 'Press Start 2P', cursive;
         }
-        
+
         .message {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif, Meiryo, "微軟正黑體", Microsoft JhengHei;
             text-shadow: #000 0px 0px 1px, #000 0px 0px 1px, #000 0px 0px 1px, #000 0px 0px 1px, #000 0px 0px 1px, #000 0px 0px 1px;
         }
-        
+
         #chat_box {
             height: calc(100% - 13px);
             overflow: hidden;
             position: absolute;
         }
-        
+
         #maudio {
             position: relative;
             left: 10px;
             top: 4px;
             width: 670px;
         }
-        
+
         audio::-webkit-media-controls-panel {
             background-color: rgb(35, 35, 35);
             color: rgb(211, 211, 211);
         }
-        
+
         audio::-webkit-media-controls-mute-button,
         audio::-webkit-media-controls-play-button {
             color: rgb(211, 211, 211);
         }
-        
+
         img {
             margin: 0px;
             padding: 0px;
             vertical-align: middle;
             height: 25px;
         }
-        
+
         a {
             color: #AAAAAA;
         }
-        
+
         @keyframes scrollclip {
             from {
                 clip-path: polygon(0% 0%, 1% 0%, 1% 100%, 0% 100%);
             }
+
             to {
                 clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
             }
@@ -151,7 +153,34 @@
     <script type="text/javascript">
         //https://ttv-api.s3.amazonaws.com/twitch.min.js
 
-        window.onload = function() {
+        window.onload = function () {
+
+            var audioQueue = [];
+            var player;
+
+            // $.ajax({
+            //     type: "post",
+            //     url: "https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyBtaFSBPJQncH9hxedjReKH8NMwgsvFvPc",
+            //     dataType: "json",
+            //     contentType: "application/json; charset=utf-8",
+            //     data: JSON.stringify({
+            //         input: {
+            //             ssml: "<speak>yuanguLAMI yuanguHAHABall yuanguCryCry </speak>"
+            //         },
+            //         voice: {
+            //             languageCode: "en_us",
+            //             ssmlGender: "FEMALE"
+            //         },
+            //         audioConfig: {
+            //             audioEncoding: "OGG_OPUS"
+            //         }
+            //     }),
+            //     cache: false,
+            //     success: function(json) {
+            //         player = new Audio("data:audio/ogg;base64," + json.audioContent);
+            //         player.play();
+            //     }
+            // })
 
             var audioIndex = {};
             var audioList = [];
@@ -175,7 +204,7 @@
                     url: "audio.json",
                     dataType: "json",
                     cache: false,
-                    success: function(json) {
+                    success: function (json) {
                         if (json.build != build) {
                             audioIndex = json.index;
                             audioList = json.audio;
@@ -208,21 +237,42 @@
 
             const audio = document.getElementById('maudio');
             var isPlayingAudio = false;
-            audio.onloadstart = function() {
+            audio.onloadstart = function () {
                 // console.log('Audio LoadStart');
             }
-            audio.onloadeddata = function() {
+            audio.onloadeddata = function () {
                 // console.log('Audio Loaded Data');
             }
-            audio.play = function() {
+            audio.play = function () {
                 // console.log('Audio Play');
             }
-            audio.onended = function() {
-                isPlayingAudio = false;
-                // console.log('Audio Ended');
+            audio.onended = function () {
+                TriggerTTLPlay();
             }
 
+            function TriggerTTLPlay() {
+                if (audio.src != "" && !audio.ended) return;
+                if (engine == "google") {
+                    if (msgarray.length == 0) return;
+                    var url = msgarray.shift();
+                    audio.src = url;
+                    audio.autoplay = true;
+                    audio.load();
+                } else if (engine == "togo") {
+                    if (audioQueue.length == 0) return;
+                    var src = audioQueue.shift();
+                    audio.src = src;
+                    audio.autoplay = true;
+                    audio.load();
+                }
+                // player = audioQueue.shift();
+                // if (player == undefined || player == null) 
+                //     return;
+                // player.onended = TriggerTTLPlay;
+                // player.play();
+            }
 
+            
             if (window.location.toString().indexOf("#") != -1 && window.location.toString().indexOf("channel=") != -1) {
                 //	var channel=window.location.toString().split("#")[1].split("&")[0];
                 //	var engine=window.location.toString().split("#")[1].split("&")[1];
@@ -241,7 +291,10 @@
                 $("#channel_textarea").val(channel);
                 $("#banlist_textarea").val(banlist);
                 $("#cdsec_textarea").val(cdsec);
-                if (engine == "itri") {
+
+                if (engine != "google" && engine != "togo") engine = "togo";
+
+                if (engine == "togo") {
 
                     $("#enginelabel2").animate({
                         backgroundColor: "#FF0000",
@@ -253,6 +306,8 @@
                     }, 1000);
 
                 }
+
+                if (se != "on" && se != "off") se = "on";
 
                 if (se == "on") {
 
@@ -276,6 +331,8 @@
 
                 $("audio").prop("volume", volume);
                 //	 $("#slider").slider( "value", volume*100);
+
+                updateurl();
 
             } else {
                 var channel = "";
@@ -314,6 +371,7 @@
             }
 
             function filter(msg) {
+                msg = msg.trim();
                 msg = msg.replace("0.0", "傻眼貓咪");
                 msg = msg.replace(/([\>\<\.@дω\*\~_\?\^\#])+/gi, "");
                 msg = msg.replace(/.*◕.*/g, "");
@@ -331,27 +389,6 @@
                 }
 
                 msg = msg.replace(/^!.*/g, "");
-
-                //	for(i=0;i<(msg.length-3);i++){
-                ///    	if( msg.charAt(i)==msg.charAt(i+1)&&msg.charAt(i+1)==msg.charAt(i+2)&&msg.charAt(i+1)==msg.charAt(i+3)){
-                //     		msg="";      
-                // 		}  
-                //	}
-                var spam = false;
-
-                //     		for(var i=0;i<(msg.length);i++){
-                //     			var j = 0;
-                //     			for(var k=0;k<(msg.length);k++){
-                //     				if(msg.charAt(i)==msg.charAt(k)){j++;}
-                //     			}
-                //     			if (j>8){
-                //     				spam = true;
-                //     			} 
-                //     		}
-                //        		if(spam){msg="";}
-
-
-                // console.log(msg);
 
                 return msg;
 
@@ -375,7 +412,7 @@
                     "channels": ["#" + channel],
                     "whispers": true
                 });
-                bot.on("message_with_tags", function(channel_f, user, message, tags) {
+                bot.on("message_with_tags", function (channel_f, user, message, tags) {
 
                     var messageWitoutEmoji = "";
                     var banlistsrray = banlist.split(",");
@@ -452,20 +489,16 @@
                         $('.ircline').first().remove();
                     }
                     $("#chat_box").append(ircline.css("animation", "scrollclip 1s"));
-
-                    //	while ($("#chat_box").height() > $("body").height()){
-                    //		$('.ircline').first().remove();
-                    //	}
                     $('#chat_box')[0].scrollTop = $('#chat_box')[0].scrollHeight;
 
                     if (banlistsrray.indexOf(user) == -1) {
 
-                        // sometimes the name of character you mention is too hard to connect in Chinese. haha. they are trying hard to figure out.
-
                         messageWitoutEmoji = messageWitoutEmoji.trim();
                         messageWitoutEmoji = filter(messageWitoutEmoji);
 
-                        if (messageWitoutEmoji.length > 0 && lanTest(messageWitoutEmoji) == "en_us") {
+                        var messageQueue = ProcessMessageToQueue(message);
+
+                        if (!messageQueue.isAllAudio && messageWitoutEmoji.length > 0 && lanTest(messageWitoutEmoji) == "en_us") {
                             var translate = "";
                             $.ajax({
                                 type: "post",
@@ -478,43 +511,101 @@
                                     format: "text"
                                 },
                                 cache: false,
-                                success: function(json) {
+                                success: function (json) {
                                     if ("data" in json) {
                                         if ("translations" in json["data"]) {
                                             if (Array.isArray(json["data"]["translations"]) && json["data"]["translations"].length > 0) {
-                                                translate = json["data"]["translations"][Math.floor(Math.random() * json["data"]["translations"].length)]["translatedText"];
+                                                translate = json["data"]["translations"][0]["translatedText"];
                                             }
                                         }
                                     }
                                 }
-                            }).always(function() {
+                            }).always(function () {
                                 if (translate != "" && lanTest(translate) != "en_us") {
-                                    ProcessMessageToQueue("翻譯蒟蒻");
-                                    ProcessMessageToQueue(translate);
-                                } else {
-                                    ProcessMessageToQueue(message);
+                                    messageQueue = ProcessMessageToQueue(translate);
+                                    messageQueue.queue.unshift({
+                                        msg: "翻譯蒟蒻",
+                                        url: "https://ttsproxy1.appspot.com/翻譯蒟蒻?tl=zh_cn&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
+                                        isAudio: false
+                                    });
                                 }
+                                AddMessageQueue(messageQueue);
                             });
                         } else {
-                            ProcessMessageToQueue(message);
+                            AddMessageQueue(messageQueue);
                         }
 
 
                     }
                 });
 
+                function AddMessageQueue(msgObj) {
+                    if (engine == "google") {
+                        for (var i = 0; i < msgObj.queue.length; i++) {
+                            msgarray.push(msgObj["queue"][i].url);
+                        }
+                        TriggerTTLPlay();
+                    } else if (engine = "togo") {
+                        var ssml = "";
+                        for (var i = 0; i < msgObj.queue.length; i++) {
+                            if (msgObj["queue"][i].isAudio)
+                                ssml += "<audio src=\"" + msgObj["queue"][i].url + "\">" + msgObj["queue"][i].msg + "</audio>";
+                            else 
+                                ssml += msgObj["queue"][i].msg;
+                        }
+                        $.ajax({
+                            type: "post",
+                            url: "https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyBtaFSBPJQncH9hxedjReKH8NMwgsvFvPc",
+                            dataType: "json",
+                            contentType: "application/json; charset=utf-8",
+                            data: JSON.stringify({
+                                input: {
+                                    ssml: "<speak>" + ssml + "</speak>"
+                                },
+                                voice: {
+                                    languageCode: "zh_TW",
+                                    ssmlGender: "FEMALE"
+                                },
+                                audioConfig: {
+                                    audioEncoding: "OGG_OPUS"
+                                }
+                            }),
+                            cache: false,
+                            success: function (json) {
+                                if (json.audioContent == "") return;
+                                audioQueue.push("data:audio/ogg;base64," + json.audioContent);
+                                TriggerTTLPlay();
+                            }
+                        })
+                    }
+                }
+
                 function ProcessMessageToQueue(message) {
 
-                    var messageLength = 0;
-                    var messageIsNotFull = true;
-                    var messageInSize = "";
-                    var messageIsTooLong = false;
-                    for (var i = 0; i < message.length; i++) {
-                        var spaceAt = message.indexOf(' ', i);
+                    var output = {
+                        isAllAudio: true,
+                        message: message,
+                        messageOutputSzie: 35,
+                        messageLength: 0,
+                        messageInSize: "",
+                        messageIsTooLong: false,
+                        messageIsNotFull: true,
+                        queue: [
+                            {
+                                msg: "",
+                                url: ""
+                            }
+                        ]
+                    };
+
+                    output["queue"] = [];
+
+                    for (var i = 0; i < output["message"].length; i++) {
+                        var spaceAt = output["message"].indexOf(' ', i);
                         if (spaceAt < 0) {
-                            spaceAt = message.length;
+                            spaceAt = output["message"].length;
                         }
-                        var word = message.substring(i, spaceAt);
+                        var word = output["message"].substring(i, spaceAt);
                         var thisWordLen = word.length;
                         var wordLeng = lanTest(word);
                         if (wordLeng == 'en_us') {
@@ -527,33 +618,33 @@
                             }
                         }
 
-                        if (messageIsNotFull) {
+                        if (output["messageIsNotFull"]) {
                             if (wordLeng == 'en_us') {
-                                messageInSize += word + " ";
+                                output["messageInSize"] += word + " ";
                             } else {
-                                var leftSpace = 35 - messageLength;
+                                var leftSpace = output["messageOutputSzie"] - output["messageLength"];
                                 if (thisWordLen <= leftSpace) {
-                                    messageInSize += word.substring(0, leftSpace) + " ";
+                                    output["messageInSize"] += word.substring(0, leftSpace) + " ";
                                 }
                             }
                         }
 
-                        messageLength += thisWordLen;
-                        if (messageLength >= 35) {
-                            messageIsTooLong = true;
+                        output["messageLength"] += thisWordLen;
+                        if (output["messageLength"] >= output["messageOutputSzie"]) {
+                            output["messageIsTooLong"] = true;
                             break;
                         }
                         i = spaceAt;
                     }
 
-                    message = messageInSize.trim();
+                    var processMessage = output["messageInSize"].trim();
 
                     if (se == "on") {
 
                         var processStar = 0;
                         var stringBuffer = "";
-                        for (i = 0; i < message.length; i++) {
-                            var currentChar = message.charAt(i);
+                        for (i = 0; i < processMessage.length; i++) {
+                            var currentChar = processMessage.charAt(i);
                             if (!(currentChar in audioIndex))
                                 continue;
                             if (!Array.isArray([currentChar]))
@@ -563,7 +654,7 @@
                             var matchAudio = null;
 
                             for (j = 0; j < audioIndex[currentChar].length; j++) {
-                                if (message.indexOf(audioIndex[currentChar][j], i) == i) {
+                                if (processMessage.indexOf(audioIndex[currentChar][j], i) == i) {
                                     isMatch = true;
                                     matchAudio = audioIndex[currentChar][j];
                                     break;
@@ -574,47 +665,82 @@
                                 continue;
 
                             if (i - processStar > 0) {
-                                var normalMessage = filter(message.substring(processStar, i));
+                                var normalMessage = filter(processMessage.substring(processStar, i));
                                 if (normalMessage != "") {
-                                    msgarray.push("https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=" + engine + "&itriconf=" + itriconfig);
+                                    // msgarray.push("https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=" + engine + "&itriconf=" + itriconfig);
+                                    output["queue"].push({
+                                        msg: normalMessage,
+                                        url: "https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
+                                        isAudio: false
+                                    });
+                                    output["isAllAudio"] = false;
                                 }
                             }
 
                             var audioMessage = getAudioFromLibrary(matchAudio);
                             if (audioMessage != null) {
-                                msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMessage);
+                                // msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMessage);
+                                output["queue"].push({
+                                    msg: matchAudio,
+                                    url: "https://togo01.github.io/twitch-bandu/audio/" + audioMessage,
+                                    isAudio: true
+                                });
                                 i += matchAudio.length - 1;
                                 processStar = i + 1;
                             }
 
                         }
 
-                        if (processStar >= message.length)
-                            return;
+                        if (processStar >= processMessage.length)
+                            return output;
 
-                        message = message.substring(processStar);
+                        processMessage = processMessage.substring(processStar);
 
-                        var audioMsg = getAudioFromLibrary(message);
+                        var audioMsg = getAudioFromLibrary(processMessage);
                         if (audioMsg != null) {
-                            msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMsg);
-                            return;
+                            // msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMsg);
+                            output["queue"].push({
+                                msg: processMessage,
+                                url: "https://togo01.github.io/twitch-bandu/audio/" + audioMsg,
+                                isAudio: true
+                            })
+                            return output;
                         }
 
                     }
 
-                    var msg = filter(message);
+                    var msg = filter(processMessage);
                     if (msg != "") {
-                        msgarray.push("https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=" + engine + "&itriconf=" + itriconfig);
+                        // msgarray.push("https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=google");
+                        output["queue"].push({
+                            msg: msg,
+                            url: "https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
+                            isAudio: false
+                        });
+                        output["isAllAudio"] = false;
+
                         if (msg == "滾滾") {
-                            msgarray.push("https://togo01.github.io/twitch-bandu/audio/嘿右.mp3");
-                        } else if (messageIsTooLong) {
-                            msgarray.push("https://ttsproxy1.appspot.com/太長唸完會嘴酸?tl=zh_cn&engine=" + engine + "&itriconf=" + itriconfig);
+                            // msgarray.push("https://togo01.github.io/twitch-bandu/audio/嘿右.mp3");
+                            output["queue"].push({
+                                msg: "嘿右",
+                                url: "https://togo01.github.io/twitch-bandu/audio/嘿右.mp3",
+                                isAudio: true
+                            });
+                        } else if (output.messageIsTooLong) {
+                            // msgarray.push("https://ttsproxy1.appspot.com/太長唸完會嘴酸?tl=zh_cn&engine=google");
+                            output["queue"].push({
+                                msg: "太長念完會嘴酸",
+                                url: "https://ttsproxy1.appspot.com/太長唸完會嘴酸?tl=zh_cn&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
+                                isAudio: false
+                            });
                         }
                     }
+
+                    return output;
 
                 }
 
-                bot.on("join", function(channel_f, user) {
+                bot.on("join", function (channel_f, user) {
                     //console.log(channel_f);
                     //console.log(user);
                     if (user == "justinfan12345") {
@@ -623,7 +749,7 @@
                         $("#chat_box")[0].scrollTop = $("#chat_box").prop("scrollHeight");
                     }
                 });
-                bot.on("part", function(channel_f, user) {
+                bot.on("part", function (channel_f, user) {
                     //console.log(channel_f);
                     //console.log(user);
                     if (user == "justinfan12345") {
@@ -636,7 +762,7 @@
 
             }
 
-            $("body").bind('keypress', function(e) {
+            $("body").bind('keypress', function (e) {
                 if (e.keyCode == 13) {
                     $('#settingpage').toggle("slow");
                 }
@@ -647,14 +773,14 @@
 
             /*
             $("#channel_textarea").bind('keypress', function(e) {
-            	if(e.keyCode==27){
-            		channel=$("#channel_textarea").val();
-            		connect();
-            		updateurl();
-            	}
+                if(e.keyCode==27){
+                    channel=$("#channel_textarea").val();
+                    connect();
+                    updateurl();
+                }
             });
              */
-            $("#channel_button").click(function() {
+            $("#channel_button").click(function () {
                 //document.location.href="#"+$("#channel_textarea").val();
 
                 if (bot == null) {
@@ -672,7 +798,7 @@
 
             });
 
-            $("#banlist_button").click(function() {
+            $("#banlist_button").click(function () {
                 //document.location.href="#"+$("#channel_textarea").val();
                 $("#banlist_textarea").val($("#banlist_textarea").val().toLowerCase());
                 banlist = $("#banlist_textarea").val();
@@ -680,7 +806,7 @@
 
             });
 
-            $("#enginelabel1").click(function() {
+            $("#enginelabel1").click(function () {
                 engine = "google";
                 updateurl();
 
@@ -696,9 +822,9 @@
 
             });
 
-            $("#enginelabel2").click(function() {
+            $("#enginelabel2").click(function () {
 
-                engine = "itri";
+                engine = "togo";
                 updateurl();
 
                 $("#enginelabel2").animate({
@@ -712,7 +838,7 @@
 
             });
 
-            $("#sclabel1").click(function() {
+            $("#sclabel1").click(function () {
                 se = "on";
                 updateurl();
                 $("#sclabel1").animate({
@@ -724,7 +850,7 @@
                     color: "rgba(255, 255, 255, 0.35)"
                 }, 1000);
             });
-            $("#sclabel2").click(function() {
+            $("#sclabel2").click(function () {
                 se = "off";
                 updateurl();
                 $("#sclabel2").animate({
@@ -738,7 +864,7 @@
 
             });
 
-            $("#cdsec_button").click(function() {
+            $("#cdsec_button").click(function () {
 
                 cdsec = $("#cdsec_textarea").val();
                 updateurl();
@@ -746,19 +872,19 @@
             });
 
 
-            $("#ttsspeaker").change(function() {
+            $("#ttsspeaker").change(function () {
                 itrionchange();
             });
-            $("#speed").change(function() {
+            $("#speed").change(function () {
                 itrionchange();
             });
-            $("#pitchlevel").change(function() {
+            $("#pitchlevel").change(function () {
                 itrionchange();
             });
-            $("#pitchsign").change(function() {
+            $("#pitchsign").change(function () {
                 itrionchange();
             });
-            $("#pitchscale").change(function() {
+            $("#pitchscale").change(function () {
                 itrionchange();
             });
 
@@ -809,119 +935,165 @@
 
     <div id=chat_box></div>
 
-    <div id="settingpage" style="display:none;position: absolute; top: 50%; left: 50%; margin-top: -172px; margin-left: -365px; color: rgb(211, 211, 211); width: 730px; height: 345px; z-index: 9002; border-radius: 3px; border: 1px solid rgb(0, 0, 0); box-shadow: rgba(0, 0, 0, 0.298039) -1px 0px 0px, rgba(0, 0, 0, 0.2) -2px 0px 0px, rgba(0, 0, 0, 0.0980392) -3px 0px 0px, rgba(0, 0, 0, 0.298039) 1px 0px 0px, rgba(0, 0, 0, 0.2) 2px 0px 0px, rgba(0, 0, 0, 0.0980392) 3px 0px 0px, rgba(0, 0, 0, 0.298039) 0px -1px 0px, rgba(0, 0, 0, 0.2) 0px -2px 0px, rgba(0, 0, 0, 0.0980392) 0px -3px 0px, rgba(0, 0, 0, 0.298039) 0px 1px 0px, rgba(0, 0, 0, 0.2) 0px 2px 0px, rgba(0, 0, 0, 0.0980392) 0px 3px 0px; background-color: rgb(30, 30, 30);">
-        <div style="border-top-left-radius: 3px; border-top-right-radius: 3px; width: 100%; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(17, 17, 17); display: block; height: 45px; background-color: rgb(40, 40, 40);">
-            <span class="closebutton" onclick="javascript:(function(){   $('#settingpage').toggle(&quot;slow&quot;);   })();" onmouseover="javascript:(function(){    jQuery( &quot;.closebutton&quot; ).animate({opacity: 0.5}, 500, function() { });   })();" onmouseout="javascript:(function(){    jQuery( &quot;.closebutton&quot;  ).animate({opacity: 0.2}, 500, function() { });   })();"
+    <div id="settingpage"
+        style="display:none;position: absolute; top: 50%; left: 50%; margin-top: -172px; margin-left: -365px; color: rgb(211, 211, 211); width: 730px; height: 345px; z-index: 9002; border-radius: 3px; border: 1px solid rgb(0, 0, 0); box-shadow: rgba(0, 0, 0, 0.298039) -1px 0px 0px, rgba(0, 0, 0, 0.2) -2px 0px 0px, rgba(0, 0, 0, 0.0980392) -3px 0px 0px, rgba(0, 0, 0, 0.298039) 1px 0px 0px, rgba(0, 0, 0, 0.2) 2px 0px 0px, rgba(0, 0, 0, 0.0980392) 3px 0px 0px, rgba(0, 0, 0, 0.298039) 0px -1px 0px, rgba(0, 0, 0, 0.2) 0px -2px 0px, rgba(0, 0, 0, 0.0980392) 0px -3px 0px, rgba(0, 0, 0, 0.298039) 0px 1px 0px, rgba(0, 0, 0, 0.2) 0px 2px 0px, rgba(0, 0, 0, 0.0980392) 0px 3px 0px; background-color: rgb(30, 30, 30);">
+        <div
+            style="border-top-left-radius: 3px; border-top-right-radius: 3px; width: 100%; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(17, 17, 17); display: block; height: 45px; background-color: rgb(40, 40, 40);">
+            <span class="closebutton"
+                onclick="javascript:(function(){   $('#settingpage').toggle(&quot;slow&quot;);   })();"
+                onmouseover="javascript:(function(){    jQuery( &quot;.closebutton&quot; ).animate({opacity: 0.5}, 500, function() { });   })();"
+                onmouseout="javascript:(function(){    jQuery( &quot;.closebutton&quot;  ).animate({opacity: 0.2}, 500, function() { });   })();"
                 style="font-size: 39px; float: right; right: 20px; top: 0px; position: absolute; color: rgb(255, 255, 255); text-shadow: rgb(0, 0, 0) 0px 1px 0px; opacity: 0.2; display: block;">×</span>
         </div>
         <div class="scroll" style="overflow-y: scroll; height: 300px;">
             <div>
                 <div class="option">
-                    <span style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">設定頻道(twitch帳號)</span>
-                    <textarea id="channel_textarea" wrap="wrap" style="color: rgb(211, 211, 211); position: absolute; float: right; right: 65px; font-style: normal; font-variant: normal; font-weight: normal; font-stretch: normal; font-size: 16px; line-height: normal; font-family: &quot;Microsoft JhengHei&quot;; box-shadow: none; width: 250px !important; height: 22px !important; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;"></textarea>
-                    <button id="channel_button" style="color: rgb(211, 211, 211); position: absolute; float: right; right: 7px; width: 50px !important; height: 28px !important; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;">ok</button>
+                    <span
+                        style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">設定頻道(twitch帳號)</span>
+                    <textarea id="channel_textarea" wrap="wrap"
+                        style="color: rgb(211, 211, 211); position: absolute; float: right; right: 65px; font-style: normal; font-variant: normal; font-weight: normal; font-stretch: normal; font-size: 16px; line-height: normal; font-family: &quot;Microsoft JhengHei&quot;; box-shadow: none; width: 250px !important; height: 22px !important; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;"></textarea>
+                    <button id="channel_button"
+                        style="color: rgb(211, 211, 211); position: absolute; float: right; right: 7px; width: 50px !important; height: 28px !important; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;">ok</button>
                 </div>
                 <div class="option" style="background-color: rgb(35, 35, 35);">
-                    <span id="volumetext" style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">設定發音音量:0.6　　　</span>
-                    <span id="slider" style="background-color: rgb(35, 35, 35);width:500px;display:inline-block; top:3px "><span>
- 			</div>
- 			<div class="option" >
- 				<span id="banlisttext" style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">禁止發音名單　　ーーー多個用逗點隔開</span>
-                    <textarea id="banlist_textarea" wrap="wrap" style="color: rgb(211, 211, 211); position: absolute; float: right; right: 65px; font-style: normal; font-variant: normal; font-weight: normal; font-stretch: normal; font-size: 16px; line-height: normal; font-family: &quot;Microsoft JhengHei&quot;; box-shadow: none; width: 250px !important; height: 22px !important; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;"></textarea>
-                    <button id="banlist_button" style="color: rgb(211, 211, 211); position: absolute; float: right; right: 7px; width: 50px !important; height: 28px !important; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;">ok</button>
+                    <span id="volumetext"
+                        style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">設定發音音量:0.6　　　</span>
+                    <span id="slider"
+                        style="background-color: rgb(35, 35, 35);width:500px;display:inline-block; top:3px "><span>
+                </div>
+                <div class="option">
+                    <span id="banlisttext"
+                        style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">禁止發音名單　　ーーー多個用逗點隔開</span>
+                    <textarea id="banlist_textarea" wrap="wrap"
+                        style="color: rgb(211, 211, 211); position: absolute; float: right; right: 65px; font-style: normal; font-variant: normal; font-weight: normal; font-stretch: normal; font-size: 16px; line-height: normal; font-family: &quot;Microsoft JhengHei&quot;; box-shadow: none; width: 250px !important; height: 22px !important; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;"></textarea>
+                    <button id="banlist_button"
+                        style="color: rgb(211, 211, 211); position: absolute; float: right; right: 7px; width: 50px !important; height: 28px !important; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;">ok</button>
 
 
                 </div>
 
-                <div class="option" style="background-color: rgb(35, 35, 35); display: none;">
-                    <span style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">合成語音引擎</span>
-                    <div style="position: relative; float: right; top: 1px; right: 7px; height: 26px; width: 120px; border-radius: 3px; background: rgba(0, 0, 0, 0.247059);">
-                        <label id="enginelabel1" class="switch-label" style="color: rgba(0, 0, 0, 0.498039); background-color: rgba(255, 0, 0,1);">google</label>
-                        <label id="enginelabel2" class="switch-label">工研院</label>
+                <div class="option" style="background-color: rgb(35, 35, 35);">
+                    <span
+                        style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">合成語音引擎</span>
+                    <div
+                        style="position: relative; float: right; top: 1px; right: 7px; height: 26px; width: 120px; border-radius: 3px; background: rgba(0, 0, 0, 0.247059);">
+                        <label id="enginelabel1" class="switch-label"
+                            style="color: rgba(0, 0, 0, 0.498039); background-color: rgba(255, 0, 0,1);">Google</label>
+                        <label id="enginelabel2" class="switch-label">Togo</label>
                     </div>
                 </div>
 
                 <div class="option" style="display: none;">
-                    <span style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">工研院小姐設定</span>
-                    <span id="msellist" style="font-size: 15px; text-align: center; color: rgb(211, 211, 211); width: 555px; height: 26px; position: absolute; float: right; right: 20px; box-shadow: none; z-index: 1; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;">
- 				語者 <select id="ttsspeaker" name="ttsspeaker">
- 						<option value="Bruce" >Bruce</option>
- 						<option value="Theresa">Theresa</option>
- 						<option value="Angela">Angela</option>
- 						<option value="MCHEN_Bruce">MCHEN_Bruce</option> 
- 						<option value="MCHEN_Joddess">MCHEN_Joddess</option>
- 						<option value="ENG_Bob">ENG_Bob</option><option value="ENG_Alice">ENG_Alice</option>
- 						<option value="ENG_Tracy">ENG_Tracy</option><option value="TW_LIT_AKoan">TW_LIT_AKoan</option>
- 						<option value="TW_SPK_AKoan" selected="">TW_SPK_AKoan</option>
- 					</select>
- 				速度 <select id="speed" name="speed">
- 						<option value="10" >10</option>
- 						<option value="9">9</option><option value="8">8</option>
- 						<option value="7">7</option> <option value="6">6</option>
- 						<option value="5">5</option><option value="4">4</option>
- 						<option value="3">3</option><option value="2">2</option>
- 						<option value="1">1</option><option value="0" selected="">0</option>
- 						<option value="-1">-1</option><option value="-2">-2</option>
- 						<option value="-3">-3</option><option value="-4">-4</option>
- 						<option value="-5">-5</option><option value="-6">-6</option>
- 						<option value="-7">-7</option><option value="-8">-8</option>
- 						<option value="-9">-9</option><option value="-10">-10</option>
- 					</select>
- 				音高 <select id="pitchlevel" name="pitchlevel">
- 						<option value="10" >10</option>
- 						<option value="9">9</option><option value="8">8</option>
- 						<option value="7">7</option> <option value="6">6</option>
- 						<option value="5">5</option><option value="4">4</option>
- 						<option value="3">3</option><option value="2">2</option>
- 						<option value="1">1</option><option value="0" selected="">0</option>
- 						<option value="-1">-1</option><option value="-2">-2</option>
- 						<option value="-3">-3</option><option value="-4">-4</option>
- 						<option value="-5">-5</option><option value="-6">-6</option>
- 						<option value="-7">-7</option><option value="-8">-8</option>
- 						<option value="-9">-9</option><option value="-10">-10</option>
- 					</select>
- 				說話方式 <select id="pitchsign" name="pitchsign">
- 						<option value="0" selected="">正常</option>
- 						<option value="1">機器人</option>
- 						<option value="2">外國人</option>
- 					</select>
- 				抑揚頓挫 <select id="pitchscale" name="pitchscale">
- 						<option value="20">20</option>
- 						<option value="19">19</option>
- 						<option value="18">18</option>
- 						<option value="17">17</option> 
- 						<option value="16">16</option>
- 						<option value="15">15</option>
- 						<option value="14">14</option>
- 						<option value="13">13</option>
- 						<option value="12">12</option>
- 						<option value="11">11</option>
- 						<option value="10">10</option>
- 						<option value="9">9</option>
- 						<option value="8">8</option>
- 						<option value="7">7</option>
- 						<option value="6">6</option>
- 						<option value="5" selected="">5</option>
- 						<option value="4">4</option>
- 						<option value="3">3</option>
- 						<option value="2">2</option>
- 						<option value="1">1</option>
- 						<option value="0">0</option>
- 					</select>
- 				</span>
+                    <span
+                        style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">工研院小姐設定</span>
+                    <span id="msellist"
+                        style="font-size: 15px; text-align: center; color: rgb(211, 211, 211); width: 555px; height: 26px; position: absolute; float: right; right: 20px; box-shadow: none; z-index: 1; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;">
+                        語者 <select id="ttsspeaker" name="ttsspeaker">
+                            <option value="Bruce">Bruce</option>
+                            <option value="Theresa">Theresa</option>
+                            <option value="Angela">Angela</option>
+                            <option value="MCHEN_Bruce">MCHEN_Bruce</option>
+                            <option value="MCHEN_Joddess">MCHEN_Joddess</option>
+                            <option value="ENG_Bob">ENG_Bob</option>
+                            <option value="ENG_Alice">ENG_Alice</option>
+                            <option value="ENG_Tracy">ENG_Tracy</option>
+                            <option value="TW_LIT_AKoan">TW_LIT_AKoan</option>
+                            <option value="TW_SPK_AKoan" selected="">TW_SPK_AKoan</option>
+                        </select>
+                        速度 <select id="speed" name="speed">
+                            <option value="10">10</option>
+                            <option value="9">9</option>
+                            <option value="8">8</option>
+                            <option value="7">7</option>
+                            <option value="6">6</option>
+                            <option value="5">5</option>
+                            <option value="4">4</option>
+                            <option value="3">3</option>
+                            <option value="2">2</option>
+                            <option value="1">1</option>
+                            <option value="0" selected="">0</option>
+                            <option value="-1">-1</option>
+                            <option value="-2">-2</option>
+                            <option value="-3">-3</option>
+                            <option value="-4">-4</option>
+                            <option value="-5">-5</option>
+                            <option value="-6">-6</option>
+                            <option value="-7">-7</option>
+                            <option value="-8">-8</option>
+                            <option value="-9">-9</option>
+                            <option value="-10">-10</option>
+                        </select>
+                        音高 <select id="pitchlevel" name="pitchlevel">
+                            <option value="10">10</option>
+                            <option value="9">9</option>
+                            <option value="8">8</option>
+                            <option value="7">7</option>
+                            <option value="6">6</option>
+                            <option value="5">5</option>
+                            <option value="4">4</option>
+                            <option value="3">3</option>
+                            <option value="2">2</option>
+                            <option value="1">1</option>
+                            <option value="0" selected="">0</option>
+                            <option value="-1">-1</option>
+                            <option value="-2">-2</option>
+                            <option value="-3">-3</option>
+                            <option value="-4">-4</option>
+                            <option value="-5">-5</option>
+                            <option value="-6">-6</option>
+                            <option value="-7">-7</option>
+                            <option value="-8">-8</option>
+                            <option value="-9">-9</option>
+                            <option value="-10">-10</option>
+                        </select>
+                        說話方式 <select id="pitchsign" name="pitchsign">
+                            <option value="0" selected="">正常</option>
+                            <option value="1">機器人</option>
+                            <option value="2">外國人</option>
+                        </select>
+                        抑揚頓挫 <select id="pitchscale" name="pitchscale">
+                            <option value="20">20</option>
+                            <option value="19">19</option>
+                            <option value="18">18</option>
+                            <option value="17">17</option>
+                            <option value="16">16</option>
+                            <option value="15">15</option>
+                            <option value="14">14</option>
+                            <option value="13">13</option>
+                            <option value="12">12</option>
+                            <option value="11">11</option>
+                            <option value="10">10</option>
+                            <option value="9">9</option>
+                            <option value="8">8</option>
+                            <option value="7">7</option>
+                            <option value="6">6</option>
+                            <option value="5" selected="">5</option>
+                            <option value="4">4</option>
+                            <option value="3">3</option>
+                            <option value="2">2</option>
+                            <option value="1">1</option>
+                            <option value="0">0</option>
+                        </select>
+                    </span>
                 </div>
 
                 <div class="option" style="background-color: rgb(35, 35, 35);">
-                    <span style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">滾滾語音</span>
-                    <div style="position: relative; float: right; top: 1px; right: 7px; height: 26px; width: 120px; border-radius: 3px; background: rgba(0, 0, 0, 0.247059);">
+                    <span
+                        style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">滾滾語音</span>
+                    <div
+                        style="position: relative; float: right; top: 1px; right: 7px; height: 26px; width: 120px; border-radius: 3px; background: rgba(0, 0, 0, 0.247059);">
                         <label id="sclabel1" class="switch-label">開</label>
-                        <label id="sclabel2" class="switch-label" style="color: rgba(0, 0, 0, 0.498039); background-color: rgba(255, 0, 0,1);">關</label>
+                        <label id="sclabel2" class="switch-label"
+                            style="color: rgba(0, 0, 0, 0.498039); background-color: rgba(255, 0, 0,1);">關</label>
                     </div>
                 </div>
                 <div class="option" style="display: none;">
-                    <span style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">特殊語音CD秒數</span>
-                    <textarea id="cdsec_textarea" wrap="wrap" style="color: rgb(211, 211, 211); position: absolute; float: right; right: 65px; font-style: normal; font-variant: normal; font-weight: normal; font-stretch: normal; font-size: 16px; line-height: normal; font-family: &quot;Microsoft JhengHei&quot;; box-shadow: none; width: 250px !important; height: 22px !important; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;"></textarea>
-                    <button id="cdsec_button" style="color: rgb(211, 211, 211); position: absolute; float: right; right: 7px; width: 50px !important; height: 28px !important; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;">ok</button>
+                    <span
+                        style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">特殊語音CD秒數</span>
+                    <textarea id="cdsec_textarea" wrap="wrap"
+                        style="color: rgb(211, 211, 211); position: absolute; float: right; right: 65px; font-style: normal; font-variant: normal; font-weight: normal; font-stretch: normal; font-size: 16px; line-height: normal; font-family: &quot;Microsoft JhengHei&quot;; box-shadow: none; width: 250px !important; height: 22px !important; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;"></textarea>
+                    <button id="cdsec_button"
+                        style="color: rgb(211, 211, 211); position: absolute; float: right; right: 7px; width: 50px !important; height: 28px !important; border: 1px solid rgb(51, 51, 51) !important; background-color: rgb(20, 20, 20) !important;">ok</button>
                 </div>
                 <div class="option" 　style="background-color: rgb(35, 35, 35);">
                     <audio controls id="maudio"></audio>

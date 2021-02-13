@@ -547,12 +547,18 @@
                         TriggerTTLPlay();
                     } else if (engine = "togo") {
                         var ssml = "";
+                        var msg = "";
                         for (var i = 0; i < msgObj.queue.length; i++) {
                             if (msgObj["queue"][i].isAudio)
                                 ssml += "<audio soundLevel=\"-6\" src=\"" + msgObj["queue"][i].url + "\">" + msgObj["queue"][i].msg + "</audio>";
                             else 
                                 ssml += msgObj["queue"][i].msg;
+                            msg += msgObj["queue"][i].msg;
                         }
+                        var lc = lanTest(msg);
+                        if (lc == "ja") lc = "ja-JP";
+                        if (lc == "zh_cn") lc = "cmn-TW";
+                        if (lc == "en_us") lc = "en-US";
                         $.ajax({
                             type: "post",
                             url: "https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyBtaFSBPJQncH9hxedjReKH8NMwgsvFvPc",
@@ -563,7 +569,7 @@
                                     ssml: "<speak>" + ssml + "</speak>"
                                 },
                                 voice: {
-                                    languageCode: "zh_TW",
+                                    languageCode: lc,
                                     ssmlGender: "FEMALE"
                                 },
                                 audioConfig: {

@@ -161,7 +161,7 @@
             var audioLibrary = {};
             var build = 0;
 
-            var users = {};
+            var users = {"global":{lastMessage:  "", lastMessageAt: 0, hasSameMessageCount:0}};
 
             var bot = null;
             var username = 'justinfan12345';
@@ -460,10 +460,11 @@
                             users[user] = {
                                 lastMessage: "",
                                 lastMessageAt: 0,
-                                hasSameMessageCount: 0
+                                hasSameMessageCount: 0,
+                                banCount: 0
                             };
                         } else {
-                            if (users[user].lastMessage == message) {
+                            if (users[user].lastMessage == message || users[user].lastMessage.indexOf(message >= 0 || message.indexOf(users[user].lastMessage) >= 0)) {
                                 users[user].hasSameMessageCount++;
                                 if (users[user].hasSameMessageCount >= 2) {
                                     skipMessage = true;

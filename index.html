@@ -464,7 +464,7 @@
                                 banCount: 0
                             };
                         } else {
-                            if (users[user].lastMessage == message || users[user].lastMessage.indexOf(message >= 0 || message.indexOf(users[user].lastMessage) >= 0)) {
+                            if (users[user].lastMessage == message || users[user].lastMessage.indexOf(message) >= 0 || message.indexOf(users[user].lastMessage) >= 0) {
                                 users[user].hasSameMessageCount++;
                                 if (users[user].hasSameMessageCount >= 2) {
                                     skipMessage = true;

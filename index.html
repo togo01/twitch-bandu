@@ -549,7 +549,7 @@
                         var ssml = "";
                         for (var i = 0; i < msgObj.queue.length; i++) {
                             if (msgObj["queue"][i].isAudio)
-                                ssml += "<audio src=\"" + msgObj["queue"][i].url + "\">" + msgObj["queue"][i].msg + "</audio>";
+                                ssml += "<audio soundLevel=\"-6\" src=\"" + msgObj["queue"][i].url + "\">" + msgObj["queue"][i].msg + "</audio>";
                             else 
                                 ssml += msgObj["queue"][i].msg;
                         }
@@ -567,7 +567,8 @@
                                     ssmlGender: "FEMALE"
                                 },
                                 audioConfig: {
-                                    audioEncoding: "OGG_OPUS"
+                                    audioEncoding: "OGG_OPUS",
+                                    volumeGainDb: 0
                                 }
                             }),
                             cache: false,

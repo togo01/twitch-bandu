@@ -156,36 +156,12 @@
         window.onload = function () {
 
             var audioQueue = [];
-            var player;
-
-            // $.ajax({
-            //     type: "post",
-            //     url: "https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyBtaFSBPJQncH9hxedjReKH8NMwgsvFvPc",
-            //     dataType: "json",
-            //     contentType: "application/json; charset=utf-8",
-            //     data: JSON.stringify({
-            //         input: {
-            //             ssml: "<speak>yuanguLAMI yuanguHAHABall yuanguCryCry </speak>"
-            //         },
-            //         voice: {
-            //             languageCode: "en_us",
-            //             ssmlGender: "FEMALE"
-            //         },
-            //         audioConfig: {
-            //             audioEncoding: "OGG_OPUS"
-            //         }
-            //     }),
-            //     cache: false,
-            //     success: function(json) {
-            //         player = new Audio("data:audio/ogg;base64," + json.audioContent);
-            //         player.play();
-            //     }
-            // })
-
             var audioIndex = {};
             var audioList = [];
             var audioLibrary = {};
             var build = 0;
+
+            var users = {};
 
             var bot = null;
             var username = 'justinfan12345';
@@ -237,15 +213,6 @@
 
             const audio = document.getElementById('maudio');
             var isPlayingAudio = false;
-            audio.onloadstart = function () {
-                // console.log('Audio LoadStart');
-            }
-            audio.onloadeddata = function () {
-                // console.log('Audio Loaded Data');
-            }
-            audio.play = function () {
-                // console.log('Audio Play');
-            }
             audio.onended = function () {
                 TriggerTTLPlay();
             }
@@ -265,11 +232,6 @@
                     audio.autoplay = true;
                     audio.load();
                 }
-                // player = audioQueue.shift();
-                // if (player == undefined || player == null) 
-                //     return;
-                // player.onended = TriggerTTLPlay;
-                // player.play();
             }
 
             
@@ -492,6 +454,35 @@
                     $('#chat_box')[0].scrollTop = $('#chat_box')[0].scrollHeight;
 
                     if (banlistsrray.indexOf(user) == -1) {
+
+                        var skipMessage = false;
+                        if (users[user] == undefined || users[user] == null) {
+                            users[user] = {
+                                lastMessage: "",
+                                lastMessageAt: 0,
+                                hasSameMessageCount: 0
+                            };
+                        } else {
+                            if (users[user].lastMessage == message) {
+                                users[user].hasSameMessageCount++;
+                                if (users[user].hasSameMessageCount >= 2) {
+                                    skipMessage = true;
+                                }
+                                if (users[user].hasSameMessageCount == 2) {
+                                    AddMessageQueue(ProcessMessageToQueue(displaynamefix + "不要再刷了拉"));
+                                }
+                            } else {
+                                users[user].hasSameMessageCount = 0;
+                                if (Date.now() - users[user].lastMessageAt < 1000) {
+                                    skipMessage = true;
+                                }
+                            } 
+                        }
+
+                        users[user].lastMessage = message;
+                        users[user].lastMessageAt = Date.now();
+
+                        if (skipMessage) return;
 
                         messageWitoutEmoji = messageWitoutEmoji.trim();
                         messageWitoutEmoji = filter(messageWitoutEmoji);

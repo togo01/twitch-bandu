@@ -550,7 +550,7 @@
                         var msg = "";
                         for (var i = 0; i < msgObj.queue.length; i++) {
                             if (msgObj["queue"][i].isAudio)
-                                ssml += "<audio soundLevel=\"-6\" src=\"" + msgObj["queue"][i].url + "\">" + msgObj["queue"][i].msg + "</audio>";
+                                ssml += "<audio soundLevel=\"-8\" src=\"" + msgObj["queue"][i].url + "\">" + msgObj["queue"][i].msg + "</audio>";
                             else 
                                 ssml += msgObj["queue"][i].msg;
                             msg += msgObj["queue"][i].msg;
@@ -630,8 +630,10 @@
                                 output["messageInSize"] += word + " ";
                             } else {
                                 var leftSpace = output["messageOutputSzie"] - output["messageLength"];
-                                if (thisWordLen <= leftSpace) {
+                                if (thisWordLen > leftSpace) {
                                     output["messageInSize"] += word.substring(0, leftSpace) + " ";
+                                } else {
+                                    output["messageInSize"] += word;
                                 }
                             }
                         }

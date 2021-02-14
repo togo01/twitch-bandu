@@ -161,7 +161,7 @@
             var audioLibrary = {};
             var build = 0;
 
-            var users = {"global":{lastMessage:  "", lastMessageAt: 0, hasSameMessageCount:0}};
+            var users = { "global": { lastMessage: "", lastMessageAt: 0, hasSameMessageCount: 0 } };
 
             var bot = null;
             var username = 'justinfan12345';
@@ -171,22 +171,35 @@
             var selist = [];
             var cd = true;
 
-            loadAudioList();
-            setInterval(loadAudioList, 10000);
+            reloadAudioList(true);
+            setInterval(checkAudioListVersion, 5000);
 
-            function loadAudioList() {
+            function checkAudioListVersion() {
+                $.ajax({
+                    type: "get",
+                    url: "version.json",
+                    dataType: "json",
+                    cache: false,
+                    success: function (json) {
+                        if (json.build != build) {
+                            reloadAudioList();
+                        }
+                    }
+                })
+            }
+
+            function reloadAudioList(firstLoad = false) {
                 $.ajax({
                     type: "get",
                     url: "audio.json",
                     dataType: "json",
                     cache: false,
                     success: function (json) {
-                        if (json.build != build) {
-                            audioIndex = json.index;
-                            audioList = json.audio;
-                            audioLibrary = json.library;
-                            build = json.build;
-                        }
+                        audioIndex = json.index;
+                        audioList = json.audio;
+                        audioLibrary = json.library;
+                        build = json.build;
+                        if (!firstLoad) AddMessageQueue(ProcessMessageToQueue("滾滾別害怕，已未您重新載入了 " + audioList.length + " 個指令。"));
                     }
                 });
             }
@@ -198,6 +211,216 @@
                     return null;
                 var audios = audioLibrary[msg];
                 return audios[Math.floor(Math.random() * audios.length)];
+            }
+
+            function AddMessageQueue(msgObj) {
+                if (engine == "google") {
+                    for (var i = 0; i < msgObj.queue.length; i++) {
+                        msgarray.push(msgObj["queue"][i].url);
+                    }
+                    TriggerTTLPlay();
+                } else if (engine = "togo") {
+                    var ssml = "";
+                    var msg = "";
+                    for (var i = 0; i < msgObj.queue.length; i++) {
+                        if (msgObj["queue"][i].isAudio)
+                            ssml += "<audio soundLevel=\"-8\" src=\"" + msgObj["queue"][i].url + "\">" + msgObj["queue"][i].msg + "</audio>";
+                        else
+                            ssml += msgObj["queue"][i].msg;
+                        msg += msgObj["queue"][i].msg;
+                    }
+                    var lc = lanTest(msg);
+                    if (lc == "ja") lc = "ja-JP";
+                    if (lc == "zh_cn") lc = "cmn-TW";
+                    if (lc == "en_us") lc = "en-US";
+                    $.ajax({
+                        type: "post",
+                        url: "https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyBtaFSBPJQncH9hxedjReKH8NMwgsvFvPc",
+                        dataType: "json",
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify({
+                            input: {
+                                ssml: "<speak>" + ssml + "</speak>"
+                            },
+                            voice: {
+                                languageCode: lc,
+                                ssmlGender: "FEMALE"
+                            },
+                            audioConfig: {
+                                audioEncoding: "OGG_OPUS",
+                                volumeGainDb: 0
+                            }
+                        }),
+                        cache: false,
+                        success: function (json) {
+                            if (json.audioContent == "") return;
+                            audioQueue.push("data:audio/ogg;base64," + json.audioContent);
+                            TriggerTTLPlay();
+                        }
+                    })
+                }
+            }
+
+            function ProcessMessageToQueue(message) {
+
+                var output = {
+                    isAllAudio: true,
+                    message: message,
+                    messageOutputSzie: 35,
+                    messageLength: 0,
+                    messageInSize: "",
+                    messageIsTooLong: false,
+                    messageIsNotFull: true,
+                    queue: [
+                        {
+                            msg: "",
+                            url: ""
+                        }
+                    ]
+                };
+
+                output["queue"] = [];
+
+                for (var i = 0; i < output["message"].length; i++) {
+                    var spaceAt = output["message"].indexOf(' ', i);
+                    if (spaceAt < 0) {
+                        spaceAt = output["message"].length;
+                    }
+                    var word = output["message"].substring(i, spaceAt);
+                    var thisWordLen = word.length;
+                    var wordLeng = lanTest(word);
+                    if (wordLeng == 'en_us') {
+                        if (word >= 10) {
+                            thisWordLen = 3;
+                        } else if (word >= 5) {
+                            thisWordLen = 2;
+                        } else {
+                            thisWordLen = 1;
+                        }
+                    }
+
+                    if (output["messageIsNotFull"]) {
+                        if (wordLeng == 'en_us') {
+                            output["messageInSize"] += word + " ";
+                        } else {
+                            var leftSpace = output["messageOutputSzie"] - output["messageLength"];
+                            if (thisWordLen > leftSpace) {
+                                output["messageInSize"] += word.substring(0, leftSpace) + " ";
+                            } else {
+                                output["messageInSize"] += word;
+                            }
+                        }
+                    }
+
+                    output["messageLength"] += thisWordLen;
+                    if (output["messageLength"] >= output["messageOutputSzie"]) {
+                        output["messageIsTooLong"] = true;
+                        break;
+                    }
+                    i = spaceAt;
+                }
+
+                var processMessage = output["messageInSize"].trim();
+
+                if (se == "on") {
+
+                    var processStar = 0;
+                    var stringBuffer = "";
+                    for (i = 0; i < processMessage.length; i++) {
+                        var currentChar = processMessage.charAt(i);
+                        if (!(currentChar in audioIndex))
+                            continue;
+                        if (!Array.isArray([currentChar]))
+                            continue;
+
+                        var isMatch = false;
+                        var matchAudio = null;
+
+                        for (j = 0; j < audioIndex[currentChar].length; j++) {
+                            if (processMessage.indexOf(audioIndex[currentChar][j], i) == i) {
+                                isMatch = true;
+                                matchAudio = audioIndex[currentChar][j];
+                                break;
+                            }
+                        }
+
+                        if (!isMatch)
+                            continue;
+
+                        if (i - processStar > 0) {
+                            var normalMessage = filter(processMessage.substring(processStar, i));
+                            if (normalMessage != "") {
+                                // msgarray.push("https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=" + engine + "&itriconf=" + itriconfig);
+                                output["queue"].push({
+                                    msg: normalMessage,
+                                    url: "https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
+                                    isAudio: false
+                                });
+                                output["isAllAudio"] = false;
+                            }
+                        }
+
+                        var audioMessage = getAudioFromLibrary(matchAudio);
+                        if (audioMessage != null) {
+                            // msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMessage);
+                            output["queue"].push({
+                                msg: matchAudio,
+                                url: "https://togo01.github.io/twitch-bandu/audio/" + audioMessage,
+                                isAudio: true
+                            });
+                            i += matchAudio.length - 1;
+                            processStar = i + 1;
+                        }
+
+                    }
+
+                    if (processStar >= processMessage.length)
+                        return output;
+
+                    processMessage = processMessage.substring(processStar);
+
+                    var audioMsg = getAudioFromLibrary(processMessage);
+                    if (audioMsg != null) {
+                        // msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMsg);
+                        output["queue"].push({
+                            msg: processMessage,
+                            url: "https://togo01.github.io/twitch-bandu/audio/" + audioMsg,
+                            isAudio: true
+                        })
+                        return output;
+                    }
+
+                }
+
+                var msg = filter(processMessage);
+                if (msg != "") {
+                    // msgarray.push("https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=google");
+                    output["queue"].push({
+                        msg: msg,
+                        url: "https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
+                        isAudio: false
+                    });
+                    output["isAllAudio"] = false;
+
+                    if (msg == "滾滾") {
+                        // msgarray.push("https://togo01.github.io/twitch-bandu/audio/嘿右.mp3");
+                        output["queue"].push({
+                            msg: "嘿右",
+                            url: "https://togo01.github.io/twitch-bandu/audio/嘿右.mp3",
+                            isAudio: true
+                        });
+                    } else if (output.messageIsTooLong) {
+                        // msgarray.push("https://ttsproxy1.appspot.com/太長唸完會嘴酸?tl=zh_cn&engine=google");
+                        output["queue"].push({
+                            msg: "太長念完會嘴酸",
+                            url: "https://ttsproxy1.appspot.com/太長唸完會嘴酸?tl=zh_cn&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
+                            isAudio: false
+                        });
+                    }
+                }
+
+                return output;
+
             }
 
 
@@ -234,7 +457,7 @@
                 }
             }
 
-            
+
             if (window.location.toString().indexOf("#") != -1 && window.location.toString().indexOf("channel=") != -1) {
                 //	var channel=window.location.toString().split("#")[1].split("&")[0];
                 //	var engine=window.location.toString().split("#")[1].split("&")[1];
@@ -477,7 +700,7 @@
                                 if (Date.now() - users[user].lastMessageAt < 1000) {
                                     skipMessage = true;
                                 }
-                            } 
+                            }
                         }
 
                         users[user].lastMessage = message;
@@ -531,215 +754,7 @@
                     }
                 });
 
-                function AddMessageQueue(msgObj) {
-                    if (engine == "google") {
-                        for (var i = 0; i < msgObj.queue.length; i++) {
-                            msgarray.push(msgObj["queue"][i].url);
-                        }
-                        TriggerTTLPlay();
-                    } else if (engine = "togo") {
-                        var ssml = "";
-                        var msg = "";
-                        for (var i = 0; i < msgObj.queue.length; i++) {
-                            if (msgObj["queue"][i].isAudio)
-                                ssml += "<audio soundLevel=\"-8\" src=\"" + msgObj["queue"][i].url + "\">" + msgObj["queue"][i].msg + "</audio>";
-                            else 
-                                ssml += msgObj["queue"][i].msg;
-                            msg += msgObj["queue"][i].msg;
-                        }
-                        var lc = lanTest(msg);
-                        if (lc == "ja") lc = "ja-JP";
-                        if (lc == "zh_cn") lc = "cmn-TW";
-                        if (lc == "en_us") lc = "en-US";
-                        $.ajax({
-                            type: "post",
-                            url: "https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyBtaFSBPJQncH9hxedjReKH8NMwgsvFvPc",
-                            dataType: "json",
-                            contentType: "application/json; charset=utf-8",
-                            data: JSON.stringify({
-                                input: {
-                                    ssml: "<speak>" + ssml + "</speak>"
-                                },
-                                voice: {
-                                    languageCode: lc,
-                                    ssmlGender: "FEMALE"
-                                },
-                                audioConfig: {
-                                    audioEncoding: "OGG_OPUS",
-                                    volumeGainDb: 0
-                                }
-                            }),
-                            cache: false,
-                            success: function (json) {
-                                if (json.audioContent == "") return;
-                                audioQueue.push("data:audio/ogg;base64," + json.audioContent);
-                                TriggerTTLPlay();
-                            }
-                        })
-                    }
-                }
 
-                function ProcessMessageToQueue(message) {
-
-                    var output = {
-                        isAllAudio: true,
-                        message: message,
-                        messageOutputSzie: 35,
-                        messageLength: 0,
-                        messageInSize: "",
-                        messageIsTooLong: false,
-                        messageIsNotFull: true,
-                        queue: [
-                            {
-                                msg: "",
-                                url: ""
-                            }
-                        ]
-                    };
-
-                    output["queue"] = [];
-
-                    for (var i = 0; i < output["message"].length; i++) {
-                        var spaceAt = output["message"].indexOf(' ', i);
-                        if (spaceAt < 0) {
-                            spaceAt = output["message"].length;
-                        }
-                        var word = output["message"].substring(i, spaceAt);
-                        var thisWordLen = word.length;
-                        var wordLeng = lanTest(word);
-                        if (wordLeng == 'en_us') {
-                            if (word >= 10) {
-                                thisWordLen = 3;
-                            } else if (word >= 5) {
-                                thisWordLen = 2;
-                            } else {
-                                thisWordLen = 1;
-                            }
-                        }
-
-                        if (output["messageIsNotFull"]) {
-                            if (wordLeng == 'en_us') {
-                                output["messageInSize"] += word + " ";
-                            } else {
-                                var leftSpace = output["messageOutputSzie"] - output["messageLength"];
-                                if (thisWordLen > leftSpace) {
-                                    output["messageInSize"] += word.substring(0, leftSpace) + " ";
-                                } else {
-                                    output["messageInSize"] += word;
-                                }
-                            }
-                        }
-
-                        output["messageLength"] += thisWordLen;
-                        if (output["messageLength"] >= output["messageOutputSzie"]) {
-                            output["messageIsTooLong"] = true;
-                            break;
-                        }
-                        i = spaceAt;
-                    }
-
-                    var processMessage = output["messageInSize"].trim();
-
-                    if (se == "on") {
-
-                        var processStar = 0;
-                        var stringBuffer = "";
-                        for (i = 0; i < processMessage.length; i++) {
-                            var currentChar = processMessage.charAt(i);
-                            if (!(currentChar in audioIndex))
-                                continue;
-                            if (!Array.isArray([currentChar]))
-                                continue;
-
-                            var isMatch = false;
-                            var matchAudio = null;
-
-                            for (j = 0; j < audioIndex[currentChar].length; j++) {
-                                if (processMessage.indexOf(audioIndex[currentChar][j], i) == i) {
-                                    isMatch = true;
-                                    matchAudio = audioIndex[currentChar][j];
-                                    break;
-                                }
-                            }
-
-                            if (!isMatch)
-                                continue;
-
-                            if (i - processStar > 0) {
-                                var normalMessage = filter(processMessage.substring(processStar, i));
-                                if (normalMessage != "") {
-                                    // msgarray.push("https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=" + engine + "&itriconf=" + itriconfig);
-                                    output["queue"].push({
-                                        msg: normalMessage,
-                                        url: "https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
-                                        isAudio: false
-                                    });
-                                    output["isAllAudio"] = false;
-                                }
-                            }
-
-                            var audioMessage = getAudioFromLibrary(matchAudio);
-                            if (audioMessage != null) {
-                                // msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMessage);
-                                output["queue"].push({
-                                    msg: matchAudio,
-                                    url: "https://togo01.github.io/twitch-bandu/audio/" + audioMessage,
-                                    isAudio: true
-                                });
-                                i += matchAudio.length - 1;
-                                processStar = i + 1;
-                            }
-
-                        }
-
-                        if (processStar >= processMessage.length)
-                            return output;
-
-                        processMessage = processMessage.substring(processStar);
-
-                        var audioMsg = getAudioFromLibrary(processMessage);
-                        if (audioMsg != null) {
-                            // msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMsg);
-                            output["queue"].push({
-                                msg: processMessage,
-                                url: "https://togo01.github.io/twitch-bandu/audio/" + audioMsg,
-                                isAudio: true
-                            })
-                            return output;
-                        }
-
-                    }
-
-                    var msg = filter(processMessage);
-                    if (msg != "") {
-                        // msgarray.push("https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=google");
-                        output["queue"].push({
-                            msg: msg,
-                            url: "https://ttsproxy1.appspot.com/" + msg + "?tl=" + lanTest(msg) + "&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
-                            isAudio: false
-                        });
-                        output["isAllAudio"] = false;
-
-                        if (msg == "滾滾") {
-                            // msgarray.push("https://togo01.github.io/twitch-bandu/audio/嘿右.mp3");
-                            output["queue"].push({
-                                msg: "嘿右",
-                                url: "https://togo01.github.io/twitch-bandu/audio/嘿右.mp3",
-                                isAudio: true
-                            });
-                        } else if (output.messageIsTooLong) {
-                            // msgarray.push("https://ttsproxy1.appspot.com/太長唸完會嘴酸?tl=zh_cn&engine=google");
-                            output["queue"].push({
-                                msg: "太長念完會嘴酸",
-                                url: "https://ttsproxy1.appspot.com/太長唸完會嘴酸?tl=zh_cn&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
-                                isAudio: false
-                            });
-                        }
-                    }
-
-                    return output;
-
-                }
 
                 bot.on("join", function (channel_f, user) {
                     //console.log(channel_f);

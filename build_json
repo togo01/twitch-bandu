@@ -15,6 +15,10 @@ output = {
   "build": time.time()
 }
 
+version = {
+  "build": output["build"]
+}
+
 for f in files:
   filename, extension = splitext(f)
   if extension != ".mp3":
@@ -25,16 +29,17 @@ for f in files:
 
   first_char = filename[0]
 
-  if first_char not in output["index"]:
-    output["index"][first_char] = [filename]
-  elif filename not in output["index"][first_char]:
-    output["index"][first_char].append(filename)
-    output["index"][first_char].sort(key=len, reverse=True)
+  if len(filename) > 1:
+    if first_char not in output["index"]:
+      output["index"][first_char] = [filename]
+    elif filename not in output["index"][first_char]:
+      output["index"][first_char].append(filename)
+      output["index"][first_char].sort(key=len, reverse=True)
 
   if filename not in output["audio"]:
     output["audio"].append(filename)
-    output["audio"].sort(key=len,  reverse=True)
-    print(filename)
+    output["audio"].sort(key=len, reverse=True)
+    # print(filename)
 
   if filename not in output["library"]:
     output["library"][filename] = [f]
@@ -46,4 +51,8 @@ print("指令數量：" + str(len(output["audio"])))
 
 fp = open("audio.json", "w")
 fp.write(json.dumps(output, ensure_ascii=False, indent=2))
+fp.close()
+
+fp = open("version.json", "w")
+fp.write(json.dumps(version, ensure_ascii=False, indent=2))
 fp.close()

@@ -263,6 +263,8 @@
 
             function ProcessMessageToQueue(message) {
 
+                message = message.toLowerCase();
+
                 var output = {
                     isAllAudio: true,
                     message: message,

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-from os import listdir
+from os import listdir, rename
 from os.path import isfile, isdir, join, splitext
 import re
 import json
@@ -9,25 +9,46 @@ import time;
 files = listdir("audio");
 
 output = {
+  "new": [],
   "index": {},
   "audio": [],
   "library": {},
+  "library_count": 0,
   "build": time.time()
 }
+
+library = {}
 
 version = {
   "build": output["build"]
 }
 
+fp = open("public.txt")
+public_cmds = fp.read().splitlines()
+fp.close()
+public_cmds.sort(key=len)
+public_cmds.sort()
+public_cmds = [str.lower() for str in public_cmds]
+
 for f in files:
   filename, extension = splitext(f)
   if extension != ".mp3":
     continue
+
+  if filename.lower() != filename:
+    rename(join("audio", f), join("audio", filename.lower() + ".mp3"))
+
   if filename[-1].isdigit():
     number = re.findall(r'\d+', filename)[-1]
     filename = filename[0:len(filename) - len(number)]
 
+  filename = filename.lower()
   first_char = filename[0]
+
+  if filename not in output["new"] and filename not in public_cmds:
+    output["new"].append(filename)
+    output["new"].sort(key=len)
+    output["new"].sort()
 
   if len(filename) > 1:
     if first_char not in output["index"]:
@@ -39,15 +60,22 @@ for f in files:
   if filename not in output["audio"]:
     output["audio"].append(filename)
     output["audio"].sort(key=len, reverse=True)
-    # print(filename)
 
-  if filename not in output["library"]:
-    output["library"][filename] = [f]
+  if filename not in library:
+    library[filename] = [f]
   else:
-    output["library"][filename].append(f)
+    library[filename].append(f)
+  output["library_count"] = output["library_count"] + 1
 
 
-print("指令數量：" + str(len(output["audio"])))
+for key in library:
+  if len(library[key]) > 1:
+    output["library"][key] = library[key]
+
+print("棒讀更新後指令來到了 " + str(len(output["audio"])) + " 個，共包含了 " + str(output["library_count"]) + " 個語音 :3_:")
+
+
+
 
 fp = open("audio.json", "w")
 fp.write(json.dumps(output, ensure_ascii=False, indent=2))

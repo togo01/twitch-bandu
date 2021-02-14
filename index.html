@@ -149,32 +149,39 @@
     <script src="index.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
 
     <script type="text/javascript">
         //https://ttv-api.s3.amazonaws.com/twitch.min.js
 
-        window.onload = function () {
+        var audioQueue = [];
+        var audioIndex = {};
+        var audioList = [];
+        var audioLibrary = {};
+        var build = 0;
 
-            var audioQueue = [];
-            var audioIndex = {};
-            var audioList = [];
-            var audioLibrary = {};
-            var build = 0;
+        var users = { "global": { lastMessage: "", lastMessageAt: 0, hasSameMessageCount: 0 } };
+        var transcache = {};
+        var ttscache = {};
 
-            var users = { "global": { lastMessage: "", lastMessageAt: 0, hasSameMessageCount: 0 } };
+        var bot = null;
+        var username = 'justinfan12345';
+        var oauth = 'blah';
 
-            var bot = null;
-            var username = 'justinfan12345';
-            var oauth = 'blah';
+        var msgarray = new Array();
+        var selist = [];
+        var cd = true;
+        var channel = "";
+        var engine = "togo";
+        var itriconfig = "TW_SPK_AKoan,0,0,0,5";
+        var volume = 0.6;
+        var banlist = "nightbot";
+        var se = "on";
+        var cdsec = "25";
 
-            var msgarray = new Array();
-            var selist = [];
-            var cd = true;
+        var audio;
 
-            reloadAudioList(true);
-            setInterval(checkAudioListVersion, 5000);
-
-            function checkAudioListVersion() {
+        function checkAudioListVersion() {
                 $.ajax({
                     type: "get",
                     url: "version.json",
@@ -213,6 +220,23 @@
                 return audios[Math.floor(Math.random() * audios.length)];
             }
 
+            function TriggerTTLPlay() {
+                if (audio.src != "" && !audio.ended) return;
+                if (engine == "google") {
+                    if (msgarray.length == 0) return;
+                    var url = msgarray.shift();
+                    audio.src = url;
+                    audio.autoplay = true;
+                    audio.load();
+                } else if (engine == "togo") {
+                    if (audioQueue.length == 0) return;
+                    var src = audioQueue.shift();
+                    audio.src = src;
+                    audio.autoplay = true;
+                    audio.load();
+                }
+            }
+
             function AddMessageQueue(msgObj) {
                 if (engine == "google") {
                     for (var i = 0; i < msgObj.queue.length; i++) {
@@ -233,6 +257,13 @@
                     if (lc == "ja") lc = "ja-JP";
                     if (lc == "zh_cn") lc = "cmn-TW";
                     if (lc == "en_us") lc = "en-US";
+                    var md5hash = CryptoJS.MD5(ssml);
+                    var md5str = md5hash.toString();
+                    if (md5str in ttscache) {
+                        audioQueue.push("data:audio/ogg;base64," + ttscache[md5str]);
+                        TriggerTTLPlay();
+                        return;
+                    }
                     $.ajax({
                         type: "post",
                         url: "https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyBtaFSBPJQncH9hxedjReKH8NMwgsvFvPc",
@@ -254,6 +285,7 @@
                         cache: false,
                         success: function (json) {
                             if (json.audioContent == "") return;
+                            ttscache[md5str] = json.audioContent;
                             audioQueue.push("data:audio/ogg;base64," + json.audioContent);
                             TriggerTTLPlay();
                         }
@@ -425,7 +457,56 @@
 
             }
 
+            function lanTest(msg) {
+                var recht = /[\u4e00-\u9fa5]/;
+                var rejp = /[\u3041-\u30fa]/;
+                var pattern = /[\u3105-\u3129\u02CA\u02C7\u02CB\u02D9]/; //注音符號 Unicode 範圍
+                language = 'en_us';
 
+                if (recht.test(msg) || pattern.test(msg)) {
+                    language = 'zh_cn';
+                }
+                if (rejp.test(msg)) {
+                    language = 'ja';
+                }
+                return language;
+            }
+
+            function filter(msg) {
+                msg = msg.trim();
+                msg = msg.replace("0.0", "傻眼貓咪");
+                msg = msg.replace(/([\>\<\.@дω\*\~_\?\^\#])+/gi, "");
+                msg = msg.replace(/.*◕.*/g, "");
+                msg = msg.replace(/([^A-Za-z])[w|W]$\1/, "哇啦");
+                msg = msg.replace(/www*/gi, "哇啦哇啦");
+                msg = msg.replace(/XD+/gi, "插滴");
+                msg = msg.replace(/https?:\/\/.*/g, "連結懶得念");
+                msg = msg.replace(/.*bschk.*/g, "");
+                msg = msg.replace(/.*pv zk.*/g, "");
+                msg = msg.replace(/.*艮心丟醫.*/g, "艮心丟醫以下省略");
+                msg = msg.replace(/(她媽|他媽|它媽|祂媽)/g, "他插")
+
+                if (msg.replace(/8/g, "") == "") {
+                    msg = msg.replace(/8/g, "八 ");
+                }
+
+                msg = msg.replace(/^!.*/g, "");
+
+                return msg;
+
+            }
+
+        window.onload = function () {
+
+
+            reloadAudioList(true);
+            setInterval(checkAudioListVersion, 5000);
+
+            audio = document.getElementById('maudio');
+            audio.onended = function () {
+                TriggerTTLPlay();
+            }
+            
             function getParameterByName(name, url) {
                 if (!url) url = window.location.href;
                 name = name.replace(/[\[\]]/g, '\\$&');
@@ -436,44 +517,15 @@
                 return decodeURIComponent(results[2].replace(/\+/g, ' '));
             }
 
-            const audio = document.getElementById('maudio');
-            var isPlayingAudio = false;
-            audio.onended = function () {
-                TriggerTTLPlay();
-            }
-
-            function TriggerTTLPlay() {
-                if (audio.src != "" && !audio.ended) return;
-                if (engine == "google") {
-                    if (msgarray.length == 0) return;
-                    var url = msgarray.shift();
-                    audio.src = url;
-                    audio.autoplay = true;
-                    audio.load();
-                } else if (engine == "togo") {
-                    if (audioQueue.length == 0) return;
-                    var src = audioQueue.shift();
-                    audio.src = src;
-                    audio.autoplay = true;
-                    audio.load();
-                }
-            }
-
-
             if (window.location.toString().indexOf("#") != -1 && window.location.toString().indexOf("channel=") != -1) {
-                //	var channel=window.location.toString().split("#")[1].split("&")[0];
-                //	var engine=window.location.toString().split("#")[1].split("&")[1];
-                //	var itriconfig=window.location.toString().split("#")[1].split("&")[2];
-                //	var volume=window.location.toString().split("#")[1].split("&")[3];
-                //	var banlist=window.location.toString().split("#")[1].split("&")[4];
 
-                var channel = getParameterByName('channel');
-                var engine = getParameterByName('engine');
-                var itriconfig = getParameterByName('itriconfig');
-                var volume = getParameterByName('volume');
-                var banlist = getParameterByName('banlist');
-                var se = getParameterByName('se');
-                var cdsec = getParameterByName('cdsec');
+                channel = getParameterByName('channel');
+                engine = getParameterByName('engine');
+                itriconfig = getParameterByName('itriconfig');
+                volume = getParameterByName('volume');
+                banlist = getParameterByName('banlist');
+                se = getParameterByName('se');
+                cdsec = getParameterByName('cdsec');
 
                 $("#channel_textarea").val(channel);
                 $("#banlist_textarea").val(banlist);
@@ -517,23 +569,20 @@
                 jQuery("#pitchscale").val(itriconfar[4]);
 
                 $("audio").prop("volume", volume);
-                //	 $("#slider").slider( "value", volume*100);
 
                 updateurl();
 
             } else {
-                var channel = "";
-                var engine = "google";
-                var itriconfig = "TW_SPK_AKoan,0,0,0,5";
-                var volume = 0.6;
-                var banlist = "nightbot";
-                var se = "on";
-                var cdsec = "25";
+                channel = "";
+                engine = "google";
+                itriconfig = "TW_SPK_AKoan,0,0,0,5";
+                volume = 0.6;
+                banlist = "nightbot";
+                se = "on";
+                cdsec = "25";
                 $("#banlist_textarea").val("nightbot")
                 $("#cdsec_textarea").val("25");
                 $("audio").prop("volume", volume);
-                //	 $("#slider").slider( "value", volume*100);
-
             }
 
             if (channel != null && channel != "") {
@@ -541,45 +590,6 @@
             }
             $('#settingpage').show("slow");
 
-
-            function lanTest(msg) {
-                var recht = /[\u4e00-\u9fa5]/;
-                var rejp = /[\u3041-\u30fa]/;
-                var pattern = /[\u3105-\u3129\u02CA\u02C7\u02CB\u02D9]/; //注音符號 Unicode 範圍
-                language = 'en_us';
-
-                if (recht.test(msg) || pattern.test(msg)) {
-                    language = 'zh_cn';
-                }
-                if (rejp.test(msg)) {
-                    language = 'ja';
-                }
-                return language;
-            }
-
-            function filter(msg) {
-                msg = msg.trim();
-                msg = msg.replace("0.0", "傻眼貓咪");
-                msg = msg.replace(/([\>\<\.@дω\*\~_\?\^\#])+/gi, "");
-                msg = msg.replace(/.*◕.*/g, "");
-                msg = msg.replace(/([^A-Za-z])[w|W]$\1/, "哇啦");
-                msg = msg.replace(/www*/gi, "哇啦哇啦");
-                msg = msg.replace(/XD+/gi, "插滴");
-                msg = msg.replace(/https?:\/\/.*/g, "連結懶得念");
-                msg = msg.replace(/.*bschk.*/g, "");
-                msg = msg.replace(/.*pv zk.*/g, "");
-                msg = msg.replace(/.*艮心丟醫.*/g, "艮心丟醫以下省略");
-                msg = msg.replace(/(她媽|他媽|它媽|祂媽)/g, "他插")
-
-                if (msg.replace(/8/g, "") == "") {
-                    msg = msg.replace(/8/g, "八 ");
-                }
-
-                msg = msg.replace(/^!.*/g, "");
-
-                return msg;
-
-            }
 
             function updateurl() {
 
@@ -638,7 +648,6 @@
                     if (displaynamefix != "") {
                         var ruby = $('<ruby></ruby>').text(displaynamefix);
                         var rt = $('<rt></rt>').text(user);
-                        //ircline.css("padding-top","7px");
                         ruby.append(rt);
                     } else {
                         var ruby = $('<ruby></ruby>').text(user);
@@ -717,37 +726,49 @@
 
                         if (!messageQueue.isAllAudio && messageWitoutEmoji.length > 0 && lanTest(messageWitoutEmoji) == "en_us") {
                             var translate = "";
-                            $.ajax({
-                                type: "post",
-                                url: "https://translation.googleapis.com/language/translate/v2?key=AIzaSyAZ2ojMmYwZH79266LWN7EVHhsSV8HcYfI",
-                                dataType: "json",
-                                data: {
-                                    q: messageWitoutEmoji,
-                                    source: "en",
-                                    target: "zh-TW",
-                                    format: "text"
-                                },
-                                cache: false,
-                                success: function (json) {
-                                    if ("data" in json) {
-                                        if ("translations" in json["data"]) {
-                                            if (Array.isArray(json["data"]["translations"]) && json["data"]["translations"].length > 0) {
-                                                translate = json["data"]["translations"][0]["translatedText"];
+                            if (messageWitoutEmoji in transcache) {
+                                translate = transcache[messageWitoutEmoji];
+                                messageQueue = ProcessMessageToQueue(translate);
+                                messageQueue.queue.unshift({
+                                    msg: "翻譯蒟蒻",
+                                    url: "https://ttsproxy1.appspot.com/翻譯蒟蒻?tl=zh_cn&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
+                                    isAudio: false
+                                });
+                                AddMessageQueue(messageQueue);
+                            } else {
+                                $.ajax({
+                                    type: "post",
+                                    url: "https://translation.googleapis.com/language/translate/v2?key=AIzaSyAZ2ojMmYwZH79266LWN7EVHhsSV8HcYfI",
+                                    dataType: "json",
+                                    data: {
+                                        q: messageWitoutEmoji,
+                                        source: "en",
+                                        target: "zh-TW",
+                                        format: "text"
+                                    },
+                                    cache: false,
+                                    success: function (json) {
+                                        if ("data" in json) {
+                                            if ("translations" in json["data"]) {
+                                                if (Array.isArray(json["data"]["translations"]) && json["data"]["translations"].length > 0) {
+                                                    translate = json["data"]["translations"][0]["translatedText"];
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            }).always(function () {
-                                if (translate != "" && lanTest(translate) != "en_us") {
-                                    messageQueue = ProcessMessageToQueue(translate);
-                                    messageQueue.queue.unshift({
-                                        msg: "翻譯蒟蒻",
-                                        url: "https://ttsproxy1.appspot.com/翻譯蒟蒻?tl=zh_cn&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
-                                        isAudio: false
-                                    });
-                                }
-                                AddMessageQueue(messageQueue);
-                            });
+                                }).always(function () {
+                                    if (translate != "" && lanTest(translate) != "en_us") {
+                                        transcache[messageWitoutEmoji] = translate;
+                                        messageQueue = ProcessMessageToQueue(translate);
+                                        messageQueue.queue.unshift({
+                                            msg: "翻譯蒟蒻",
+                                            url: "https://ttsproxy1.appspot.com/翻譯蒟蒻?tl=zh_cn&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
+                                            isAudio: false
+                                        });
+                                    }
+                                    AddMessageQueue(messageQueue);
+                                });
+                            }
                         } else {
                             AddMessageQueue(messageQueue);
                         }
@@ -759,8 +780,6 @@
 
 
                 bot.on("join", function (channel_f, user) {
-                    //console.log(channel_f);
-                    //console.log(user);
                     if (user == "justinfan12345") {
                         var txt2 = $("<div class=\"ircline\"></div>").text("成功登入" + channel_f);
                         $("#chat_box").append(txt2);
@@ -768,8 +787,6 @@
                     }
                 });
                 bot.on("part", function (channel_f, user) {
-                    //console.log(channel_f);
-                    //console.log(user);
                     if (user == "justinfan12345") {
                         var txt2 = $("<div class=\"ircline\"></div>").text("成功登出" + channel_f);
                         $("#chat_box").append(txt2);
@@ -786,21 +803,7 @@
                 }
             });
 
-
-
-
-            /*
-            $("#channel_textarea").bind('keypress', function(e) {
-                if(e.keyCode==27){
-                    channel=$("#channel_textarea").val();
-                    connect();
-                    updateurl();
-                }
-            });
-             */
             $("#channel_button").click(function () {
-                //document.location.href="#"+$("#channel_textarea").val();
-
                 if (bot == null) {
                     $("#channel_textarea").val($("#channel_textarea").val().toLowerCase());
                     channel = $("#channel_textarea").val();
@@ -817,7 +820,6 @@
             });
 
             $("#banlist_button").click(function () {
-                //document.location.href="#"+$("#channel_textarea").val();
                 $("#banlist_textarea").val($("#banlist_textarea").val().toLowerCase());
                 banlist = $("#banlist_textarea").val();
                 updateurl();
@@ -911,21 +913,21 @@
                 updateurl();
             }
 
-            setInterval(speak_runnable, 100);
+            // setInterval(speak_runnable, 100);
 
             // speak_runnable();
 
-            function speak_runnable() {
-                if (isPlayingAudio) return;
+            // function speak_runnable() {
+            //     if (isPlayingAudio) return;
 
-                if (msgarray[0] && (audio.paused || audio.ended)) {
-                    isPlayingAudio = true;
-                    audio.src = msgarray[0];
-                    audio.autoplay = true;
-                    audio.load();
-                    msgarray.shift();
-                }
-            }
+            //     if (msgarray[0] && (audio.paused || audio.ended)) {
+            //         isPlayingAudio = true;
+            //         audio.src = msgarray[0];
+            //         audio.autoplay = true;
+            //         audio.load();
+            //         msgarray.shift();
+            //     }
+            // }
 
             $("#slider").slider({
                 min: 0,

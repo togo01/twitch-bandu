@@ -19,10 +19,6 @@ output = {
 
 library = {}
 
-version = {
-  "build": output["build"]
-}
-
 fp = open("public.txt")
 public_cmds = fp.read().splitlines()
 fp.close()
@@ -81,6 +77,10 @@ fp = open("audio.json", "w")
 fp.write(json.dumps(output, ensure_ascii=False, indent=2))
 fp.close()
 
-fp = open("version.json", "w")
-fp.write(json.dumps(version, ensure_ascii=False, indent=2))
-fp.close()
+version_file = open("version.json")
+version = json.loads(version_file.read())
+version_file.close()
+version["audio_library"] = output["build"]
+version_file = open("version.json", "w")
+version_file.write(json.dumps(version, ensure_ascii=False, indent=2))
+version_file.close()

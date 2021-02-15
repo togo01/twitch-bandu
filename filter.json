@@ -1,0 +1,49 @@
+{
+  "filters": [
+    {
+      "regex": "/^!.*/g",
+      "replace": ""
+    },
+    {
+      "regex": "/0.0/g",
+      "replace": "傻眼貓咪"
+    },
+    {
+      "regex": "/XD+/gi",
+      "replace": "插滴"
+    },
+    {
+      "regex": "/([^A-Za-z])[w|W]$\\1/",
+      "replace": "哇啦"
+    },
+    {
+      "regex": "/www*/gi",
+      "replace": "哇啦哇啦"
+    },
+    {
+      "regex": "/([\\>\\<\\.@дω\\*\\~_\\?\\^\\#])+/gi",
+      "replace": ""
+    },
+    {
+      "regex": "/.*◕.*/g",
+      "replace": ""
+    },
+    {
+      "regex": "/https?:\\/\\/.*/g",
+      "replace": "連結懶得念"
+    },
+    {
+      "regex": "/(她媽|他媽|它媽|祂媽)/g",
+      "replace": "他插"
+    },
+    {
+      "regex": "/爲/g",
+      "replace": "未"
+    },
+    {
+      "regex": "/^8+$/gm",
+      "replace": "八"
+    }
+  ],
+  "build": 1613368404.083602
+}

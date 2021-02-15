@@ -166,6 +166,9 @@
         var ttsremotecache = [];
         var ttsremotebuild = 0;
 
+        var filters = [];
+        var filter_build = 0;
+
         var bot = null;
         var username = 'justinfan12345';
         var oauth = 'blah';
@@ -196,6 +199,9 @@
                     if (json.ttscache != ttsremotebuild) {
                         reloadTTSRemoteCache();
                     }
+                    if (json.filter != filter_build) {
+                        reloadFilter();
+                    }
                 }
             })
         }
@@ -211,7 +217,7 @@
                     audioList = json.audio;
                     audioLibrary = json.library;
                     audioLibraryBuild = json.build;
-                    if (!firstLoad) AddMessageQueue(ProcessMessageToQueue("滾滾別害怕，已未您重新載入了 " + audioList.length + " 個指令。"));
+                    if (!firstLoad) AddMessageQueue(ProcessMessageToQueue("滾滾別害怕，已為您重新載入了 " + audioList.length + " 個指令。"));
                 }
             });
         }
@@ -225,6 +231,26 @@
                 success: function (json) {
                     ttsremotecache = json.ttscache;
                     ttsremotebuild = json.build;
+                }
+            });
+        }
+
+        function reloadFilter(firstLoad = false) {
+            $.ajax({
+                type: "get",
+                url: "filter.json",
+                dataType: "json",
+                cache: false,
+                success: function (json) {
+                    filters = json.filters;
+                    filter_build = json.build;
+                    for(i in filters) {
+                        var flags = filters[i].regex.replace(/.*\/([gimy]*)$/, '$1');
+                        var pattern = filters[i].regex.replace(new RegExp('^/(.*?)/'+flags+'$'), '$1');
+                        var regex = new RegExp(pattern, flags);
+                        filters[i].regex = regex;
+                    }
+                    if (!firstLoad) AddMessageQueue(ProcessMessageToQueue("已重新載入棒讀文字過濾規則。"));
                 }
             });
         }
@@ -484,9 +510,10 @@
             var recht = /[\u4e00-\u9fa5]/;
             var rejp = /[\u3041-\u30fa]/;
             var pattern = /[\u3105-\u3129\u02CA\u02C7\u02CB\u02D9]/; //注音符號 Unicode 範圍
+            var num = /[0-9]/;
             language = 'en_us';
 
-            if (recht.test(msg) || pattern.test(msg)) {
+            if (recht.test(msg) || pattern.test(msg) || num.test(msg)) {
                 language = 'zh_cn';
             }
             if (rejp.test(msg)) {
@@ -497,23 +524,12 @@
 
         function filter(msg) {
             msg = msg.trim();
-            msg = msg.replace("0.0", "傻眼貓咪");
-            msg = msg.replace(/([\>\<\.@дω\*\~_\?\^\#])+/gi, "");
-            msg = msg.replace(/.*◕.*/g, "");
-            msg = msg.replace(/([^A-Za-z])[w|W]$\1/, "哇啦");
-            msg = msg.replace(/www*/gi, "哇啦哇啦");
-            msg = msg.replace(/XD+/gi, "插滴");
-            msg = msg.replace(/https?:\/\/.*/g, "連結懶得念");
-            msg = msg.replace(/.*bschk.*/g, "");
-            msg = msg.replace(/.*pv zk.*/g, "");
-            msg = msg.replace(/.*艮心丟醫.*/g, "艮心丟醫以下省略");
-            msg = msg.replace(/(她媽|他媽|它媽|祂媽)/g, "他插")
 
-            if (msg.replace(/8/g, "") == "") {
-                msg = msg.replace(/8/g, "八 ");
+            for (i in filters) {
+                msg = msg.replace(filters[i].regex, filters[i].replace);
+                if (msg.length == 0)
+                    return msg;
             }
-
-            msg = msg.replace(/^!.*/g, "");
 
             return msg;
 
@@ -523,6 +539,8 @@
 
 
             reloadAudioList(true);
+            reloadTTSRemoteCache();
+            reloadFilter(true);
             setInterval(checkAudioListVersion, 5000);
 
             audio = document.getElementById('maudio');

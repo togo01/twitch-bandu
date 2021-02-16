@@ -33,6 +33,10 @@
       "replace": "連結懶得念"
     },
     {
+      "regex": "/(tysm)/g",
+      "replace": "thank you so much"
+    },
+    {
       "regex": "/(她媽|他媽|它媽|祂媽)/g",
       "replace": "他插"
     },
@@ -45,5 +49,5 @@
       "replace": "八"
     }
   ],
-  "build": 1613368404.083602
+  "build": 1613498143.10785
 }

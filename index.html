@@ -282,6 +282,8 @@
         }
 
         function AddMessageQueue(msgObj) {
+            if (msgObj.queue.length == 0)
+                return;
             if (engine == "google") {
                 for (var i = 0; i < msgObj.queue.length; i++) {
                     msgarray.push(msgObj["queue"][i].url);
@@ -297,6 +299,7 @@
                         ssml += msgObj["queue"][i].msg;
                     msg += msgObj["queue"][i].msg;
                 }
+                if (ssml == "") return;
                 var lc = lanTest(msg);
                 if (lc == "ja") lc = "ja-JP";
                 if (lc == "zh_cn") lc = "cmn-TW";

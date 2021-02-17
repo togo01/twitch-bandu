@@ -249,6 +249,13 @@
                         var pattern = filters[i].regex.replace(new RegExp('^/(.*?)/'+flags+'$'), '$1');
                         var regex = new RegExp(pattern, flags);
                         filters[i].regex = regex;
+
+                        if (filters[i].match != "") { 
+                            flags = filters[i].match.replace(/.*\/([gimy]*)$/, '$1');
+                            pattern = filters[i].match.replace(new RegExp('^/(.*?)/'+flags+'$'), '$1');
+                            regex = new RegExp(pattern, flags);
+                            filters[i].match = regex;
+                        }
                     }
                     if (!firstLoad) AddMessageQueue(ProcessMessageToQueue("已重新載入棒讀文字過濾規則。"));
                 }
@@ -529,6 +536,9 @@
             msg = msg.trim();
 
             for (i in filters) {
+                if (filters[i].match instanceof RegExp) {
+                    if (msg.match(filters[i].match) == null) continue;
+                }
                 msg = msg.replace(filters[i].regex, filters[i].replace);
                 if (msg.length == 0)
                     return msg;

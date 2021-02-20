@@ -765,6 +765,7 @@
                         var skipMessage = false;
                         if (users[user] == undefined || users[user] == null) {
                             users[user] = {
+                                messages: [],
                                 lastMessage: "",
                                 lastMessageAt: 0,
                                 hasSameMessageCount: 0,
@@ -786,6 +787,7 @@
                                         } else {
                                             AddMessageQueue(ProcessMessageToQueue(displaynamefix + " 不要再刷了拉"));
                                         }
+                                        users[user].banCount++;
                                     }
                                 } else {
                                     users[user].hasSameMessageCount = 0;
@@ -798,6 +800,9 @@
                             }
                         }
 
+                        var sayHello = (users[user].messages.length == 0) || (Date.now() - [user].lastMessageAt > 60 * 60 * 1000);
+
+                        users[user].messages.push({ m: message, t: Date.now() });
                         users[user].lastMessage = message;
                         users[user].lastMessageAt = Date.now();
 
@@ -818,6 +823,7 @@
                                     url: "https://ttsproxy1.appspot.com/翻譯蒟蒻?tl=zh_cn&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
                                     isAudio: false
                                 });
+                                if (sayHello) SayHelloTo(user, displaynamefix, "en_us");
                                 AddMessageQueue(messageQueue);
                             } else {
                                 $.ajax({
@@ -850,16 +856,34 @@
                                             isAudio: false
                                         });
                                     }
+                                    if (sayHello) SayHelloTo(user, displaynamefix, "en_us");
                                     AddMessageQueue(messageQueue);
                                 });
                             }
                         } else {
+                            if (sayHello) SayHelloTo(user, displaynamefix, lanTest(message));
                             AddMessageQueue(messageQueue);
                         }
 
 
                     }
                 });
+
+                function SayHelloTo(user, displaynamefix, lang) {
+                    var name = displaynamefix;
+                    if (valid_users[user] != undefined && valid_users[user] != null && valid_users[user] != "") {
+                        name = valid_users[user];
+                    }
+                    if (lang == "en_us") {
+                        AddMessageQueue(ProcessMessageToQueue("Hello " + name));
+                        return;
+                    }
+                    if (lang == "ja") {
+                        AddMessageQueue(ProcessMessageToQueue("こんにちは" + name));
+                        return;
+                    }
+                    AddMessageQueue(ProcessMessageToQueue(name + "安安"));
+                }
 
 
 

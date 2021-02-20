@@ -1,0 +1,51 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+from os import listdir, rename
+from os.path import isfile, isdir, join, splitext
+import re
+import json
+import time
+import base64
+
+build_at = time.time()
+
+output = {
+  "users": {},
+  "build": build_at
+}
+
+input_file = open("users.txt")
+filter_lines = input_file.read().splitlines()
+input_file.close()
+
+for line in filter_lines:
+  
+  if line.strip().startswith("#"):
+    continue
+
+  pos = line.find("<>")
+  if pos < 0:
+    continue
+
+  left = line[0:pos].strip()
+  right = line[pos+3:].strip()
+
+  if left in output["users"]:
+    continue
+
+  output["users"][left] = right
+
+  print(left + ", " + right)
+
+
+f = open("users.json", "w")
+f.write(json.dumps(output, ensure_ascii=False, indent=2))
+f.close()
+
+version_file = open("version.json")
+version = json.loads(version_file.read())
+version_file.close()
+version["users"] = build_at
+version_file = open("version.json", "w")
+version_file.write(json.dumps(version, ensure_ascii=False, indent=2))
+version_file.close()

@@ -160,7 +160,6 @@
         var audioLibrary = {};
         var audioLibraryBuild = 0;
 
-        var users = { "global": { lastMessage: "", lastMessageAt: 0, hasSameMessageCount: 0 } };
         var transcache = {};
         var ttscache = {};
         var ttsremotecache = [];
@@ -168,6 +167,10 @@
 
         var filters = [];
         var filter_build = 0;
+
+        var users = { "global": { lastMessage: "", lastMessageAt: 0, hasSameMessageCount: 0 } };
+        var valid_users = {};
+        var valid_users_build = 0;
 
         var bot = null;
         var username = 'justinfan12345';
@@ -201,6 +204,9 @@
                     }
                     if (json.filter != filter_build) {
                         reloadFilter();
+                    }
+                    if (json.users != valid_users_build) {
+                        reloadUsers();
                     }
                 }
             })
@@ -258,6 +264,19 @@
                         }
                     }
                     if (!firstLoad) AddMessageQueue(ProcessMessageToQueue("已重新載入棒讀文字過濾規則。"));
+                }
+            });
+        }
+
+        function reloadUsers() {
+            $.ajax({
+                type: "get",
+                url: "users.json",
+                dataType: "json",
+                cache: false,
+                success: function (json) {
+                    valid_users = json.users;
+                    valid_users_build = json.build;
                 }
             });
         }
@@ -550,10 +569,10 @@
 
         window.onload = function () {
 
-
             reloadAudioList(true);
             reloadTTSRemoteCache();
             reloadFilter(true);
+            reloadUsers();
             setInterval(checkAudioListVersion, 5000);
 
             audio = document.getElementById('maudio');
@@ -752,19 +771,30 @@
                                 banCount: 0
                             };
                         } else {
-                            if (users[user].lastMessage == message || users[user].lastMessage.indexOf(message) >= 0 || message.indexOf(users[user].lastMessage) >= 0) {
-                                users[user].hasSameMessageCount++;
-                                if (users[user].hasSameMessageCount >= 2) {
-                                    skipMessage = true;
-                                }
-                                if (users[user].hasSameMessageCount == 2) {
-                                    AddMessageQueue(ProcessMessageToQueue(displaynamefix + "不要再刷了拉"));
+                            if (Date.now() - users[user].lastMessageAt < 8000) {
+                                if (users[user].lastMessage == message || 
+                                    users[user].lastMessage.indexOf(message) >= 0 || 
+                                    message.indexOf(users[user].lastMessage) >= 0) 
+                                {
+                                    users[user].hasSameMessageCount++;
+                                    if (users[user].hasSameMessageCount >= 2) {
+                                        skipMessage = true;
+                                    }
+                                    if (users[user].hasSameMessageCount == 2) {
+                                        if (valid_users[user] != undefined && valid_users[user] != null && valid_users[user] != "") {
+                                            AddMessageQueue(ProcessMessageToQueue(valid_users[user] + " 不要再刷了拉"));
+                                        } else {
+                                            AddMessageQueue(ProcessMessageToQueue(displaynamefix + " 不要再刷了拉"));
+                                        }
+                                    }
+                                } else {
+                                    users[user].hasSameMessageCount = 0;
+                                    if (Date.now() - users[user].lastMessageAt < 1000) {
+                                        skipMessage = true;
+                                    }
                                 }
                             } else {
                                 users[user].hasSameMessageCount = 0;
-                                if (Date.now() - users[user].lastMessageAt < 1000) {
-                                    skipMessage = true;
-                                }
                             }
                         }
 

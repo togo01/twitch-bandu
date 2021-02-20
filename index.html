@@ -371,6 +371,25 @@
             }
         }
 
+        function SimpleMessageToQueue(message) {
+            var output = {
+                isAllAudio: false,
+                message: message,
+                messageOutputSzie: message.length,
+                messageLength: message.length,
+                messageInSize: message,
+                messageIsTooLong: false,
+                messageIsNotFull: true,
+                queue: [
+                    {
+                        msg: message,
+                        url: "https://ttsproxy1.appspot.com/" + message + "?tl=" + lanTest(message) + "&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
+                    }
+                ]
+            };
+            return output;
+        }
+
         function ProcessMessageToQueue(message) {
 
             message = message.toLowerCase();

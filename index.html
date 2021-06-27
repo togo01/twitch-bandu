@@ -223,7 +223,7 @@
                     audioList = json.audio;
                     audioLibrary = json.library;
                     audioLibraryBuild = json.build;
-                    if (!firstLoad) AddMessageQueue(ProcessMessageToQueue("滾滾別害怕，已為您重新載入了 " + audioList.length + " 個指令。"));
+                    //if (!firstLoad) AddMessageQueue(ProcessMessageToQueue("滾滾別害怕，已為您重新載入了 " + audioList.length + " 個指令。"));
                 }
             });
         }
@@ -263,7 +263,7 @@
                             filters[i].match = regex;
                         }
                     }
-                    if (!firstLoad) AddMessageQueue(ProcessMessageToQueue("已重新載入棒讀文字過濾規則。"));
+                    //if (!firstLoad) AddMessageQueue(ProcessMessageToQueue("已重新載入棒讀文字過濾規則。"));
                 }
             });
         }
@@ -1224,7 +1224,7 @@
                     </span>
                 </div>
 
-                <div class="option" style="background-color: rgb(35, 35, 35);">
+                <div class="option" style="display: none; background-color: rgb(35, 35, 35);">
                     <span
                         style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">滾滾語音</span>
                     <div

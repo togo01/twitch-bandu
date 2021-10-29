@@ -223,7 +223,9 @@
                     audioList = json.audio;
                     audioLibrary = json.library;
                     audioLibraryBuild = json.build;
-                    //if (!firstLoad) AddMessageQueue(ProcessMessageToQueue("滾滾別害怕，已為您重新載入了 " + audioList.length + " 個指令。"));
+                    if (channel == "yuangungunder")
+                        if (!firstLoad) 
+                            AddMessageQueue(ProcessMessageToQueue("滾滾別害怕，已為您重新載入了 " + audioList.length + " 個指令。"));
                 }
             });
         }
@@ -263,7 +265,9 @@
                             filters[i].match = regex;
                         }
                     }
-                    //if (!firstLoad) AddMessageQueue(ProcessMessageToQueue("已重新載入棒讀文字過濾規則。"));
+                    if (channel == "yuangungunder")
+                        if (!firstLoad) 
+                            AddMessageQueue(ProcessMessageToQueue("已重新載入棒讀文字過濾規則。"));
                 }
             });
         }
@@ -453,74 +457,76 @@
 
             var processMessage = output["messageInSize"].trim();
 
-            if (se == "on") {
+            if (channel == "yuangungunder") {
+                if (se == "on") {
 
-                var processStar = 0;
-                var stringBuffer = "";
-                for (i = 0; i < processMessage.length; i++) {
-                    var currentChar = processMessage.charAt(i);
-                    if (!(currentChar in audioIndex))
-                        continue;
-                    if (!Array.isArray([currentChar]))
-                        continue;
+                    var processStar = 0;
+                    var stringBuffer = "";
+                    for (i = 0; i < processMessage.length; i++) {
+                        var currentChar = processMessage.charAt(i);
+                        if (!(currentChar in audioIndex))
+                            continue;
+                        if (!Array.isArray([currentChar]))
+                            continue;
 
-                    var isMatch = false;
-                    var matchAudio = null;
+                        var isMatch = false;
+                        var matchAudio = null;
 
-                    for (j = 0; j < audioIndex[currentChar].length; j++) {
-                        if (processMessage.indexOf(audioIndex[currentChar][j], i) == i) {
-                            isMatch = true;
-                            matchAudio = audioIndex[currentChar][j];
-                            break;
+                        for (j = 0; j < audioIndex[currentChar].length; j++) {
+                            if (processMessage.indexOf(audioIndex[currentChar][j], i) == i) {
+                                isMatch = true;
+                                matchAudio = audioIndex[currentChar][j];
+                                break;
+                            }
                         }
-                    }
 
-                    if (!isMatch)
-                        continue;
+                        if (!isMatch)
+                            continue;
 
-                    if (i - processStar > 0) {
-                        var normalMessage = filter(processMessage.substring(processStar, i));
-                        if (normalMessage != "") {
-                            // msgarray.push("https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=" + engine + "&itriconf=" + itriconfig);
+                        if (i - processStar > 0) {
+                            var normalMessage = filter(processMessage.substring(processStar, i));
+                            if (normalMessage != "") {
+                                // msgarray.push("https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=" + engine + "&itriconf=" + itriconfig);
+                                output["queue"].push({
+                                    msg: normalMessage,
+                                    url: "https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
+                                    isAudio: false
+                                });
+                                output["isAllAudio"] = false;
+                            }
+                        }
+
+                        var audioMessage = getAudioFromLibrary(matchAudio);
+                        if (audioMessage != null) {
+                            // msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMessage);
                             output["queue"].push({
-                                msg: normalMessage,
-                                url: "https://ttsproxy1.appspot.com/" + normalMessage + "?tl=" + lanTest(normalMessage) + "&engine=google&itriconf=TW_SPK_AKoan,0,0,0,5",
-                                isAudio: false
+                                msg: matchAudio,
+                                url: "https://togo01.github.io/twitch-bandu/audio/" + audioMessage,
+                                isAudio: true
                             });
-                            output["isAllAudio"] = false;
+                            i += matchAudio.length - 1;
+                            processStar = i + 1;
                         }
+
                     }
 
-                    var audioMessage = getAudioFromLibrary(matchAudio);
-                    if (audioMessage != null) {
-                        // msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMessage);
+                    if (processStar >= processMessage.length)
+                        return output;
+
+                    processMessage = processMessage.substring(processStar);
+
+                    var audioMsg = getAudioFromLibrary(processMessage);
+                    if (audioMsg != null) {
+                        // msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMsg);
                         output["queue"].push({
-                            msg: matchAudio,
-                            url: "https://togo01.github.io/twitch-bandu/audio/" + audioMessage,
+                            msg: processMessage,
+                            url: "https://togo01.github.io/twitch-bandu/audio/" + audioMsg,
                             isAudio: true
-                        });
-                        i += matchAudio.length - 1;
-                        processStar = i + 1;
+                        })
+                        return output;
                     }
 
                 }
-
-                if (processStar >= processMessage.length)
-                    return output;
-
-                processMessage = processMessage.substring(processStar);
-
-                var audioMsg = getAudioFromLibrary(processMessage);
-                if (audioMsg != null) {
-                    // msgarray.push("https://togo01.github.io/twitch-bandu/audio/" + audioMsg);
-                    output["queue"].push({
-                        msg: processMessage,
-                        url: "https://togo01.github.io/twitch-bandu/audio/" + audioMsg,
-                        isAudio: true
-                    })
-                    return output;
-                }
-
             }
 
             var msg = filter(processMessage);
@@ -533,14 +539,17 @@
                 });
                 output["isAllAudio"] = false;
 
-                if (msg == "滾滾") {
-                    // msgarray.push("https://togo01.github.io/twitch-bandu/audio/嘿右.mp3");
-                    output["queue"].push({
-                        msg: "嘿右",
-                        url: "https://togo01.github.io/twitch-bandu/audio/嘿右.mp3",
-                        isAudio: true
-                    });
-                } else if (output.messageIsTooLong) {
+                if (channel == "yuangungunder") {
+                    if (msg == "滾滾") {
+                        // msgarray.push("https://togo01.github.io/twitch-bandu/audio/嘿右.mp3");
+                        output["queue"].push({
+                            msg: "嘿右",
+                            url: "https://togo01.github.io/twitch-bandu/audio/嘿右.mp3",
+                            isAudio: true
+                        });
+                    } 
+                }
+                if (output.messageIsTooLong) {
                     // msgarray.push("https://ttsproxy1.appspot.com/太長唸完會嘴酸?tl=zh_cn&engine=google");
                     output["queue"].push({
                         msg: "太長念完會嘴酸",
@@ -697,6 +706,11 @@
             }
 
             function connect() {
+                if (channel == "yuangungunder") {
+                    $("#gunggungvoice").show();
+                } else {
+                    $("#gunggungvoice").hide();
+                }
                 bot = new twitchIRC(username, oauth, {
                     "channels": ["#" + channel],
                     "whispers": true
@@ -1224,7 +1238,7 @@
                     </span>
                 </div>
 
-                <div class="option" style="display: none; background-color: rgb(35, 35, 35);">
+                <div id="gunggungvoice" class="option" style="display: none; background-color: rgb(35, 35, 35);">
                     <span
                         style="color: rgb(211, 211, 211); font-family: &quot;Microsoft JhengHei&quot;; font-size: 16px;">滾滾語音</span>
                     <div
